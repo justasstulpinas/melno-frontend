@@ -51,15 +51,19 @@ export default function EditTemplatePage() {
   return (
     <form onSubmit={handleSave} className="flex flex-col h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-20">
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
+      <div className="flex items-center justify-between px-8 py-3 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-20 gap-6">
+        <div className="flex items-center gap-3 text-xs text-zinc-500 shrink-0">
           <Link href="/dashboard/templates" className="hover:text-zinc-300 transition-colors">Šablonai</Link>
           <span>/</span>
-          <Link href={`/dashboard/templates/${id}`} className="hover:text-zinc-300 transition-colors">{name}</Link>
-          <span>/</span>
-          <span className="text-zinc-300">Redaguoti</span>
         </div>
-        <div className="flex items-center gap-3">
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Šablono pavadinimas…"
+          className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none min-w-0"
+        />
+        <div className="flex items-center gap-3 shrink-0">
           {error && <p className="text-xs text-red-400">{error}</p>}
           <Link href={`/dashboard/templates/${id}`} className="text-sm text-zinc-500 hover:text-white transition-colors">
             Atšaukti
