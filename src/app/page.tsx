@@ -164,67 +164,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
+      {/* ── Pricing coming soon ── */}
       <section className="border-t border-zinc-800 px-6 py-20">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center mb-3">Kainos</p>
-          <h2 className="text-2xl font-bold text-center mb-2 text-balance">Paprasta kainodara</h2>
-          <p className="text-sm text-zinc-500 text-center mb-14 text-pretty">Viena neapmokėta sąskaita kainuoja daugiau nei metai Melno Pro.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-            {/* Free */}
-            <div className="bg-zinc-900 rounded-xl p-7 flex flex-col"
-              style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.07)" }}>
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4">Nemokamas</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-white tabular-nums">€0</span>
-                <span className="text-zinc-500 text-sm ml-1">/ mėn.</span>
-              </div>
-              <ul className="flex flex-col gap-3 mb-8 flex-1">
-                {["3 aktyvūs šablonai", "6 sutartys per mėnesį", "PDF ir DOCX eksportas", "Rankų elektroninis parašas"].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-zinc-300">
-                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/register"
-                className="text-center text-sm border border-zinc-700 text-zinc-300 px-5 py-2.5 rounded-md hover:border-zinc-500 hover:text-white transition-[border-color,color] duration-150 active:scale-[0.96] transition-transform">
-                Pradėti nemokamai
-              </Link>
-            </div>
-
-            {/* Pro */}
-            <div className="bg-white text-zinc-950 rounded-xl p-7 flex flex-col relative overflow-hidden"
-              style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.15)" }}>
-              <div className="absolute top-4 right-4 bg-zinc-950 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                Populiariausias
-              </div>
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4">Pro</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold tabular-nums">€8</span>
-                <span className="text-zinc-500 text-sm ml-1">/ mėn.</span>
-              </div>
-              <ul className="flex flex-col gap-3 mb-8 flex-1">
-                {["Neriboti šablonai", "Neribotos sutartys", "PDF ir DOCX eksportas", "Rankų elektroninis parašas", "Prioritetinis palaikymas"].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-zinc-700">
-                    <svg className="w-4 h-4 text-zinc-950 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/register"
-                className="text-center text-sm bg-zinc-950 text-white px-5 py-2.5 rounded-md hover:bg-zinc-800 transition-[background-color] duration-150 active:scale-[0.96] transition-transform font-medium">
-                Išbandyti Pro
-              </Link>
-            </div>
-
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3">Kainos</p>
+          <h2 className="text-2xl font-bold mb-4 text-balance">Paprasta kainodara</h2>
+          <p className="text-sm text-zinc-500 mb-8 text-pretty">Mokamos planai greitai. Kol kas — viskas nemokama.</p>
+          <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400"
+            style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+            Šiuo metu nemokama visiems
           </div>
-          <p className="text-xs text-zinc-600 text-center mt-5">Nereikia kreditinės kortelės. Galima atšaukti bet kada.</p>
         </div>
       </section>
 
