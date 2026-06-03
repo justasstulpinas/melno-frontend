@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api, SubmissionListItem, Submission } from "@/lib/api";
@@ -302,7 +302,7 @@ function ContractRow({
 
 // ---- Page -----------------------------------------------------------------
 
-export default function ContractsPage() {
+function ContractsPageInner() {
   const searchParams = useSearchParams();
   const [submissions, setSubmissions] = useState<SubmissionListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -405,5 +405,13 @@ export default function ContractsPage() {
         )}
       </div>
     </>
+  );
+}
+
+export default function ContractsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-zinc-500">Kraunama…</div>}>
+      <ContractsPageInner />
+    </Suspense>
   );
 }
