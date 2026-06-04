@@ -29,14 +29,14 @@ export default function LandingPage() {
       <section className="flex flex-col items-center text-center px-6 pt-24 pb-20">
         <div className="hero-item inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 text-xs text-zinc-400 mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-          Sukurta laisvai samdomiems Lietuvoje
+          Sukurta freelanceriams Lietuvoje.
         </div>
         <h1 className="hero-item text-5xl sm:text-6xl font-bold leading-tight max-w-3xl mb-6 tracking-tight text-balance">
           Sutartis: 3 minutės.<br />
           <span className="text-zinc-400">Ne 3 dienos.</span>
         </h1>
         <p className="hero-item text-lg text-zinc-400 max-w-xl mb-10 leading-relaxed text-pretty">
-          Sukurk šabloną vieną kartą, išsiųsk nuorodą klientui, gauk parašą. Klientui paskyra nereikalinga. Jokių PDF priedų. Jokio laukimo.
+          Sukurk šabloną vieną kartą, išsiųsk nuorodą klientui, gauk pasirašytą dokumentą. Viskas vienoje vietoje.
         </p>
         <div className="hero-item flex flex-col sm:flex-row items-center gap-4">
           <Link href="/register"
@@ -62,17 +62,17 @@ export default function LandingPage() {
               {
                 n: "1",
                 title: "Sukurkite šabloną vieną kartą",
-                body: "Parašykite sutartį su laukų žymekliais kaip {{kliento_vardas}}. Užtrunka 3 minutes. Po to naudokite neribotai.",
+                body: "Parašykite sutartį su laukų žymekliais kaip {{kliento_vardas}}. Paruošę šabloną naudokite jį neribotai.",
               },
               {
                 n: "2",
                 title: "Išsiųskite nuorodą per 30 sekundžių",
-                body: "Sugeneruokite unikalią nuorodą su iš anksto užpildytais jūsų duomenimis. Išsiųskite klientui per el. paštą ar žinutes. Jokių priedų, jokių PDF failų.",
+                body: "Sugeneruokite unikalią nuorodą su iš anksto užpildytais jūsų duomenimis. Išsiųskite klientui per el. paštą ar žinutes.",
               },
               {
                 n: "3",
-                title: "Gaukite parašą. Klientas nesukuria paskyros",
-                body: "Klientas užpildo savo duomenis, pasirašo ranka ekrane ir pateikia. Jūs iš karto gaunate pranešimą ir PDF.",
+                title: "Gaukite pasirašytą dokumentą.",
+                body: "Klientas užpildo savo duomenis ir pasirašo ranka ekrane. Jums patvirtinus sutartį galite ją parsisiųsti PDF arba DOCX formatu.",
               },
             ].map((step) => (
               <div key={step.n} className="flex flex-col">
@@ -91,7 +91,7 @@ export default function LandingPage() {
       <section className="border-t border-zinc-800 px-6 py-20 bg-zinc-900/30">
         <div className="max-w-4xl mx-auto">
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center mb-3">Funkcijos</p>
-          <h2 className="text-2xl font-bold text-center mb-14 text-balance">Viskas ko reikia, nieko ko nereikia</h2>
+          <h2 className="text-2xl font-bold text-center mb-14 text-balance">Viskas ko reikia laiko taupymui.</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
@@ -101,7 +101,7 @@ export default function LandingPage() {
                   </svg>
                 ),
                 title: "Redaktorius",
-                body: "Turtingo teksto redaktorius su A4 peržiūra. Sutartis atrodo profesionaliai nuo pirmos minutės.",
+                body: "Dokumentų redaktorius su A4 peržiūra. Sutartis atrodo profesionaliai nuo pirmos minutės.",
               },
               {
                 icon: (
@@ -110,7 +110,7 @@ export default function LandingPage() {
                   </svg>
                 ),
                 title: "Dinaminiai laukai",
-                body: "Įterpkite žymeklius kaip {{kliento_vardas}} ir užpildomi automatiškai. Jokio copy-paste tarp sutarčių.",
+                body: "Įterpkite žymeklius kaip {{kliento_vardas}} ar {{mano_įmonė}}. Jokio copy-paste tarp sutarčių.",
               },
               {
                 icon: (
@@ -118,7 +118,7 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 ),
-                title: "Bendrinamos nuorodos",
+                title: "Pasidalinamos nuorodos",
                 body: "Kiekvienam klientui unikali nuoroda su galiojimo laiku. Klientui paskyra nereikalinga. Sutartis pasiekiama iš karto.",
               },
               {
@@ -127,8 +127,8 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 ),
-                title: "Rankų parašas",
-                body: "Klientas pasirašo ranka tiesiai naršyklėje. Parašas įterpiamas į PDF. Teisiškai galioja kaip paprastas elektroninis parašas.",
+                title: "Rašytinis parašas",
+                body: "Klientas pasirašo ranka tiesiai naršyklėje. Parašas įterpiamas į PDF.",
               },
               {
                 icon: (
@@ -137,7 +137,7 @@ export default function LandingPage() {
                   </svg>
                 ),
                 title: "PDF ir DOCX eksportas",
-                body: "Kiekviena pasirašyta sutartis vienu paspaudimu kaip PDF arba Word. VMI audito atveju esi padengtas.",
+                body: "Kiekviena pasirašyta sutartis vienu paspaudimu kaip PDF arba Word. Visos tavo sutartys vienoje vietoje.",
               },
               {
                 icon: (
@@ -146,7 +146,7 @@ export default function LandingPage() {
                   </svg>
                 ),
                 title: "Sutarčių sekimas",
-                body: "Matyk visų sutarčių būsenas realiuoju laiku: laukiama, pasirašyta, patvirtinta. Viskas vienoje vietoje.",
+                body: "Matyk visų sutarčių būsenas realiuoju laiku: laukiama, pasirašyta, patvirtinta.",
               },
             ].map((f) => (
               <div key={f.title}
@@ -168,8 +168,8 @@ export default function LandingPage() {
       <section className="border-t border-zinc-800 px-6 py-20">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3">Kainos</p>
-          <h2 className="text-2xl font-bold mb-4 text-balance">Paprasta kainodara</h2>
-          <p className="text-sm text-zinc-500 mb-8 text-pretty">Mokamos planai greitai. Kol kas — viskas nemokama.</p>
+          <h2 className="text-2xl font-bold mb-4 text-balance">Mes dar tik augame!</h2>
+          <p className="text-sm text-zinc-500 mb-8 text-pretty">Mokami planai greitai. Naudokitės laisvai, viskas nemokama!</p>
           <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400"
             style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
@@ -194,7 +194,7 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-zinc-800 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-white">Melno © 2025</span>
+        <span className="text-sm font-semibold text-white">Melno © 2026</span>
         <p className="text-xs text-zinc-600">Privatumo politika · Sąlygos</p>
       </footer>
 
