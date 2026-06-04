@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearToken, api } from "@/lib/api";
+import SessionWarning from "@/components/SessionWarning";
 
 const navItems = [
   {
@@ -65,6 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen bg-zinc-950 overflow-hidden">
+      <SessionWarning />
       <aside className="flex flex-col w-56 shrink-0 bg-zinc-950 border-r border-zinc-800">
         <div className="flex items-center h-14 px-5 border-b border-zinc-800">
           <span className="text-base font-semibold text-white tracking-tight">Melno</span>
