@@ -129,9 +129,9 @@ export default function PlaceholderSidebar({ editorRef }: { editorRef: RefObject
   function removeOwner(value: string) { setOwnerCustom((p) => p.filter((f) => f.value !== value)); }
   function removeClient(value: string) { setClientCustom((p) => p.filter((f) => f.value !== value)); }
 
-  function renderChips(items: Item[], onRemove?: (v: string) => void) {
+  function renderChips(items: Item[], onRemove?: (v: string) => void, keyPrefix = "") {
     return items.map((item) => (
-      <div key={item.value} className="flex items-center gap-1 group">
+      <div key={`${keyPrefix}${item.value}`} className="flex items-center gap-1 group">
         <button
           type="button"
           onClick={() => editorRef.current?.insertPlaceholder(item.value)}
@@ -163,8 +163,8 @@ export default function PlaceholderSidebar({ editorRef }: { editorRef: RefObject
           <p className="text-xs font-medium text-zinc-500">Jūsų informacija</p>
         </div>
         <div className="flex flex-col gap-1">
-          {renderChips(OWNER_BUILTIN)}
-          {renderChips(ownerCustom, removeOwner)}
+          {renderChips(OWNER_BUILTIN, undefined, "builtin-")}
+          {renderChips(ownerCustom, removeOwner, "custom-")}
           <CustomAdder
             prefix="owner_"
             existing={ownerCustom}
@@ -193,8 +193,8 @@ export default function PlaceholderSidebar({ editorRef }: { editorRef: RefObject
           <p className="text-xs font-medium text-zinc-500">Klientas užpildo</p>
         </div>
         <div className="flex flex-col gap-1">
-          {renderChips(CLIENT_BUILTIN)}
-          {renderChips(clientCustom, removeClient)}
+          {renderChips(CLIENT_BUILTIN, undefined, "builtin-")}
+          {renderChips(clientCustom, removeClient, "custom-")}
           <CustomAdder
             prefix="client_"
             existing={clientCustom}

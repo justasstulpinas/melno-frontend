@@ -73,6 +73,7 @@ export default function TemplateDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [tab, setTab] = useState<"info" | "links" | "confirmed" | "pending">("info");
 
   useEffect(() => {
     Promise.all([api.getTemplate(id), api.getSubmissions(id), api.getLinks(id)])
@@ -117,6 +118,8 @@ export default function TemplateDetailPage() {
 
   const fields = extractFields(template.content);
   const activeLinks = links.filter((l) => !l.is_revoked && new Date(l.expires_at) > new Date());
+  const confirmedSubmissions = submissions.filter((s) => s.status === "confirmed" || s.status === "completed");
+  const pendingSubmissions = submissions.filter((s) => s.status === "submitted");
 
   const statusBadge: Record<string, string> = {
     draft: "bg-zinc-800 text-zinc-400",
@@ -188,119 +191,137 @@ export default function TemplateDetailPage() {
         </div>
       </div>
 
-      {/* ── Stats row ── */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <p className="text-xs text-zinc-500 mb-2">Aktyvios nuorodos</p>
-          <p className="text-2xl font-semibold text-white tabular-nums">{activeLinks.length}</p>
-        </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <p className="text-xs text-zinc-500 mb-2">Pateikimai</p>
-          <p className="text-2xl font-semibold text-white tabular-nums">{submissions.length}</p>
-        </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-          <p className="text-xs text-zinc-500 mb-2">Laukia patvirtinimo</p>
-          <p className="text-2xl font-semibold text-white tabular-nums">
-            {submissions.filter((s) => s.status === "submitted").length}
-          </p>
-        </div>
+      {/* ── Tab cards ── */}
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { key: "info", label: "Šablono informacija", value: null },
+          { key: "links", label: "Aktyvios nuorodos", value: activeLinks.length },
+          { key: "confirmed", label: "Patvirtintos", value: confirmedSubmissions.length },
+          { key: "pending", label: "Laukia patvirtinimo", value: pendingSubmissions.length },
+        ].map((card) => (
+          <button
+            key={card.key}
+            type="button"
+            onClick={() => setTab(card.key as typeof tab)}
+            className={`text-left rounded-xl p-5 border transition-colors ${
+              tab === card.key
+                ? "bg-white text-zinc-950 border-white"
+                : "bg-zinc-900 border-zinc-800 hover:border-zinc-600 text-white"
+            }`}
+          >
+            <p className={`text-xs mb-2 ${tab === card.key ? "text-zinc-500" : "text-zinc-500"}`}>
+              {card.label}
+            </p>
+            {card.value !== null ? (
+              <p className={`text-2xl font-semibold tabular-nums ${tab === card.key ? "text-zinc-950" : "text-white"}`}>
+                {card.value}
+              </p>
+            ) : (
+              <svg className={`w-5 h-5 ${tab === card.key ? "text-zinc-400" : "text-zinc-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* ── Fields + Preview ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* ── Tab content ── */}
 
-        {/* Fields card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Laukai</p>
-
-          {fields.owner.length === 0 && fields.client.length === 0 && fields.system.length === 0 ? (
-            <p className="text-xs text-zinc-600">Laukų nerasta. Pridėkite <code className="text-zinc-400">{"{{laukas}}"}</code> į turinį.</p>
-          ) : (
-            <>
-              {fields.owner.length > 0 && (
-                <FieldGroup title="Jūs užpildote" color="blue" fields={fields.owner} />
-              )}
-              {fields.client.length > 0 && (
-                <FieldGroup title="Klientas užpildo" color="purple" fields={fields.client} />
-              )}
-              {fields.system.length > 0 && (
-                <FieldGroup title="Automatiškai" color="green" fields={fields.system} />
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Preview card */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Peržiūra</p>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setShowPreview(false)}
-                className={`text-xs px-2.5 py-1 rounded-md transition-colors ${!showPreview ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"}`}
-              >
-                Šaltinis
-              </button>
-              <button
-                onClick={() => setShowPreview(true)}
-                className={`text-xs px-2.5 py-1 rounded-md transition-colors ${showPreview ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"}`}
-              >
-                Dokumentas
-              </button>
-            </div>
-          </div>
-          <div className={`flex-1 overflow-y-auto max-h-80 ${showPreview ? "bg-white p-8" : "p-5"}`}>
-            {!showPreview ? (
-              <HighlightedContent content={template.content} />
+      {/* Info tab */}
+      {tab === "info" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4">
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Laukai</p>
+            {fields.owner.length === 0 && fields.client.length === 0 && fields.system.length === 0 ? (
+              <p className="text-xs text-zinc-600">Laukų nerasta. Pridėkite <code className="text-zinc-400">{"{{laukas}}"}</code> į turinį.</p>
             ) : (
-              <div className="text-zinc-900 text-sm leading-relaxed prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: template.content }} />
+              <>
+                {fields.owner.length > 0 && <FieldGroup title="Jūs užpildote" color="blue" fields={fields.owner} />}
+                {fields.client.length > 0 && <FieldGroup title="Klientas užpildo" color="purple" fields={fields.client} />}
+                {fields.system.length > 0 && <FieldGroup title="Automatiškai" color="green" fields={fields.system} />}
+              </>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* ── Links card ── */}
-      {links.length > 0 && (
+          <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Peržiūra</p>
+              <div className="flex gap-1">
+                <button onClick={() => setShowPreview(false)} className={`text-xs px-2.5 py-1 rounded-md transition-colors ${!showPreview ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"}`}>Šaltinis</button>
+                <button onClick={() => setShowPreview(true)} className={`text-xs px-2.5 py-1 rounded-md transition-colors ${showPreview ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"}`}>Dokumentas</button>
+              </div>
+            </div>
+            <div className={`flex-1 overflow-y-auto max-h-80 ${showPreview ? "bg-white p-8" : "p-5"}`}>
+              {!showPreview
+                ? <HighlightedContent content={template.content} />
+                : <div className="text-zinc-900 text-sm leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: template.content }} />
+              }
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Links tab */}
+      {tab === "links" && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
             <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Nuorodos</p>
             <span className="text-xs text-zinc-600">{links.length} iš viso</span>
           </div>
-          <div className="flex flex-col divide-y divide-zinc-800">
-            {links.map((link) => (
-              <LinkRow key={link.id} link={link} onRevoke={handleRevoke} />
-            ))}
-          </div>
+          {links.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-zinc-500 mb-1">Nuorodų dar nėra.</p>
+              {template.status === "active" && (
+                <Link href={`/dashboard/templates/${id}/link`} className="text-xs text-zinc-400 hover:text-white underline transition-colors">
+                  Sukurti nuorodą
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-zinc-800">
+              {links.map((link) => <LinkRow key={link.id} link={link} onRevoke={handleRevoke} />)}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── Submissions card ── */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Pateikimai</p>
-          <span className="text-xs text-zinc-600">{submissions.length} iš viso</span>
+      {/* Confirmed tab */}
+      {tab === "confirmed" && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Patvirtintos sutartys</p>
+            <span className="text-xs text-zinc-600">{confirmedSubmissions.length} iš viso</span>
+          </div>
+          {confirmedSubmissions.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-zinc-500">Patvirtintų sutarčių dar nėra.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-zinc-800">
+              {confirmedSubmissions.map((s) => <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} />)}
+            </div>
+          )}
         </div>
+      )}
 
-        {submissions.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-sm text-zinc-500 mb-1">Pateikimų dar nėra.</p>
-            {template.status === "active" ? (
-              <Link href={`/dashboard/templates/${id}/link`} className="text-xs text-zinc-400 hover:text-white underline transition-colors">
-                Dalinkitės nuoroda, kad pradėtumėte.
-              </Link>
-            ) : (
-              <p className="text-xs text-zinc-600">Aktyvuokite šabloną, kad galėtumėte dalintis.</p>
-            )}
+      {/* Pending tab */}
+      {tab === "pending" && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Laukia patvirtinimo</p>
+            <span className="text-xs text-zinc-600">{pendingSubmissions.length} iš viso</span>
           </div>
-        ) : (
-          <div className="flex flex-col divide-y divide-zinc-800">
-            {submissions.map((s) => (
-              <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} />
-            ))}
-          </div>
-        )}
-      </div>
+          {pendingSubmissions.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-zinc-500">Nėra laukiančių patvirtinimo.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-zinc-800">
+              {pendingSubmissions.map((s) => <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} />)}
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );

@@ -277,7 +277,12 @@ export default function SignPage() {
             {/* Signature */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-white">Parašas</h2>
+                <div>
+                  <h2 className="text-sm font-semibold text-white">Parašas</h2>
+                  {fields["client_name"] && (
+                    <p className="text-xs text-zinc-400 mt-0.5">{fields["client_name"]}</p>
+                  )}
+                </div>
                 {hasSig && (
                   <button type="button" onClick={clearSig} className="text-xs text-zinc-400 hover:text-white transition-colors">
                     Išvalyti
