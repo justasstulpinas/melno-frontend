@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, Template, Submission, PublicLink } from "@/lib/api";
@@ -74,6 +74,7 @@ export default function TemplateDetailPage() {
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [tab, setTab] = useState<"info" | "links" | "confirmed" | "pending">("info");
+  const [modalSubmission, setModalSubmission] = useState<Submission | null>(null);
 
   useEffect(() => {
     Promise.all([api.getTemplate(id), api.getSubmissions(id), api.getLinks(id)])
@@ -131,6 +132,17 @@ export default function TemplateDetailPage() {
   };
 
   return (
+    <>
+    {modalSubmission && (
+      <SubmissionModal
+        submission={modalSubmission}
+        onClose={() => setModalSubmission(null)}
+        onConfirm={(id) => {
+          setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" as const } : s));
+          setModalSubmission(null);
+        }}
+      />
+    )}
     <div className="p-8 max-w-5xl flex flex-col gap-6">
 
       {/* Breadcrumb */}
@@ -298,7 +310,7 @@ export default function TemplateDetailPage() {
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-zinc-800">
-              {confirmedSubmissions.map((s) => <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} />)}
+              {confirmedSubmissions.map((s) => <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} onOpen={setModalSubmission} />)}
             </div>
           )}
         </div>
@@ -317,13 +329,14 @@ export default function TemplateDetailPage() {
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-zinc-800">
-              {pendingSubmissions.map((s) => <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} />)}
+              {pendingSubmissions.map((s) => <SubmissionRow key={s.id} submission={s} onConfirm={handleConfirm} onOpen={setModalSubmission} />)}
             </div>
           )}
         </div>
       )}
 
     </div>
+    </>
   );
 }
 
@@ -422,10 +435,36 @@ function LinkRow({ link, onRevoke }: { link: PublicLink; onRevoke: (id: number) 
   );
 }
 
-// ---- Submission row ----
+// ---- Submission modal ----
 
-function SubmissionRow({ submission: s, onConfirm }: { submission: Submission; onConfirm: (id: number) => void }) {
-  const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
+function SubmissionModal({ submission: s, onClose, onConfirm }: {
+  submission: Submission;
+  onClose: () => void;
+  onConfirm: (id: number) => void;
+}) {
+  const [html, setHtml] = useState<string | null>(null);
+  const [tab, setTab] = useState<"info" | "preview">("info");
+  const [confirming, setConfirming] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    api.getSubmissionHtml(s.id).then(({ html }) => setHtml(html)).catch(() => {});
+  }, [s.id]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function handleConfirm() {
+    setConfirming(true);
+    try {
+      await api.confirmSubmission(s.id);
+      onConfirm(s.id);
+      onClose();
+    } finally { setConfirming(false); }
+  }
 
   const statusStyle: Record<string, string> = {
     submitted: "bg-blue-950 text-blue-400",
@@ -437,14 +476,140 @@ function SubmissionRow({ submission: s, onConfirm }: { submission: Submission; o
     submitted: "Pateiktas", confirmed: "Patvirtintas", completed: "Baigtas", cancelled: "Atšauktas",
   };
 
-  async function handleDownload(type: "pdf" | "docx") {
-    setDownloading(type);
-    await downloadFile(s.id, type);
-    setDownloading(null);
-  }
+  const dataEntries = Object.entries(s.submitted_data).filter(([k]) => k !== "signature" && !k.startsWith("sys_"));
+  const tabClass = (t: "info" | "preview") =>
+    `px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === t ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"}`;
 
   return (
-    <div className="flex items-center gap-4 px-5 py-3 hover:bg-zinc-800/40 transition-colors">
+    <div ref={overlayRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 shrink-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-xs text-zinc-600 font-mono">#{s.id}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusStyle[s.status]}`}>{statusLabel[s.status]}</span>
+            </div>
+            <p className="text-base font-semibold text-white truncate">{s.submitter_email ?? "—"}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">{fmtDate(s.submitted_at)}</p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0 ml-4">
+            {s.status === "submitted" && (
+              <button onClick={handleConfirm} disabled={confirming}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50">
+                {confirming ? "Tvirtinama…" : "Patvirtinti"}
+              </button>
+            )}
+            <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors p-1">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex gap-1 px-6 pt-3 shrink-0">
+          <button className={tabClass("info")} onClick={() => setTab("info")}>Kliento duomenys</button>
+          <button className={tabClass("preview")} onClick={() => setTab("preview")}>Sutarties peržiūra</button>
+        </div>
+
+        <div className="flex-1 overflow-auto px-6 pb-6 pt-4">
+          {tab === "info" ? (
+            <div className="flex flex-col gap-6">
+              {dataEntries.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-3">Užpildyti laukai</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {dataEntries.map(([k, v]) => (
+                      <div key={k} className="bg-zinc-800/60 rounded-lg px-3 py-2.5">
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">{k.replace(/_/g, " ")}</p>
+                        <p className="text-sm text-white break-words">{v || "—"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {s.signature_image && (
+                <div>
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-3">Parašas</p>
+                  <div className="bg-white rounded-lg p-4 inline-block">
+                    <img src={`data:image/png;base64,${s.signature_image}`} alt="Parašas" className="max-w-[280px] h-auto" />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <DownloadBtn submissionId={s.id} format="pdf" label="Atsisiųsti PDF" />
+                <DownloadBtn submissionId={s.id} format="docx" label="Atsisiųsti DOCX" />
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#c8c8c8] rounded-xl py-8 px-6">
+              <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.3)]" style={{ maxWidth: 794 }}>
+                {html ? (
+                  <iframe srcDoc={html} className="w-full border-0 rounded" style={{ minHeight: 900 }}
+                    onLoad={(e) => {
+                      const iframe = e.currentTarget;
+                      const body = iframe.contentDocument?.body;
+                      if (body) iframe.style.height = body.scrollHeight + 40 + "px";
+                    }} />
+                ) : (
+                  <p className="p-8 text-sm text-zinc-500">Kraunama…</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DownloadBtn({ submissionId, format, label }: { submissionId: number; format: "pdf" | "docx"; label: string }) {
+  const [loading, setLoading] = useState(false);
+  async function download() {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const res = await fetch(`${BASE_URL}/contracts/submissions/${submissionId}/${format}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `sutartis-${submissionId}.${format}`; a.click();
+      URL.revokeObjectURL(url);
+    } finally { setLoading(false); }
+  }
+  return (
+    <button onClick={download} disabled={loading}
+      className="text-xs text-zinc-400 border border-zinc-700 hover:border-zinc-500 hover:text-white px-3 py-2 rounded-md transition-colors disabled:opacity-50">
+      {loading ? "Kraunama…" : label}
+    </button>
+  );
+}
+
+// ---- Submission row ----
+
+function SubmissionRow({ submission: s, onConfirm, onOpen }: {
+  submission: Submission;
+  onConfirm: (id: number) => void;
+  onOpen: (s: Submission) => void;
+}) {
+  const statusStyle: Record<string, string> = {
+    submitted: "bg-blue-950 text-blue-400",
+    confirmed: "bg-emerald-950 text-emerald-400",
+    completed: "bg-zinc-800 text-zinc-300",
+    cancelled: "bg-red-950 text-red-400",
+  };
+  const statusLabel: Record<string, string> = {
+    submitted: "Pateiktas", confirmed: "Patvirtintas", completed: "Baigtas", cancelled: "Atšauktas",
+  };
+
+  return (
+    <div className="flex items-center gap-4 px-5 py-3 hover:bg-zinc-800/40 transition-colors cursor-pointer"
+      onClick={() => onOpen(s)}>
       <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusStyle[s.status]}`}>
         {statusLabel[s.status]}
       </span>
@@ -452,21 +617,16 @@ function SubmissionRow({ submission: s, onConfirm }: { submission: Submission; o
         <p className="text-sm text-white">{s.submitter_email ?? "—"}</p>
         <p className="text-[10px] text-zinc-600 mt-0.5">{fmtDate(s.submitted_at)}</p>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
         {s.status === "submitted" && (
           <button onClick={() => onConfirm(s.id)}
             className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors px-2 py-1">
             Patvirtinti
           </button>
         )}
-        <button onClick={() => handleDownload("pdf")} disabled={downloading === "pdf"}
-          className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 disabled:opacity-40">
-          {downloading === "pdf" ? "…" : "PDF"}
-        </button>
-        <button onClick={() => handleDownload("docx")} disabled={downloading === "docx"}
-          className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 disabled:opacity-40">
-          {downloading === "docx" ? "…" : "DOCX"}
-        </button>
+        <svg className="w-4 h-4 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
       </div>
     </div>
   );
