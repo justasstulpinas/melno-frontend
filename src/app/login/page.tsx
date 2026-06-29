@@ -128,7 +128,13 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className={`${syne.className} text-center text-sm text-zinc-500 mt-8`}>
+          <p className={`${syne.className} text-center text-sm text-zinc-500 mt-4`}>
+            <Link href="/forgot-password" className="text-zinc-400 hover:text-white transition-colors">
+              Pamiršote slaptažodį?
+            </Link>
+          </p>
+
+          <p className={`${syne.className} text-center text-sm text-zinc-500 mt-4`}>
             Neturite paskyros?{" "}
             <Link href="/register" className="text-zinc-300 hover:text-white transition-colors">
               Registruotis

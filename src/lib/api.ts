@@ -52,6 +52,24 @@ export const api = {
   logout() {
     return request<{ status: string }>("/auth/logout", { method: "POST" });
   },
+  verifyEmail(token: string) {
+    return request<{ status: string }>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
+  },
+  forgotPassword(email: string) {
+    return request<{ status: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+  resetPassword(token: string, new_password: string) {
+    return request<{ status: string }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password }),
+    });
+  },
 
   // Templates
   getTemplates() {
