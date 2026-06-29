@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Syne } from "next/font/google";
 import { api, saveToken } from "@/lib/api";
 
@@ -10,6 +10,8 @@ const syne = Syne({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const passwordReset = searchParams.get("reset") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -65,6 +67,12 @@ export default function LoginPage() {
 
           <h1 className="text-2xl font-semibold text-white mb-1">Sveiki sugrįžę</h1>
           <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>Prisijunkite prie savo paskyros</p>
+
+          {passwordReset && (
+            <p className={`${syne.className} text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 rounded-md px-3 py-2 mb-4`}>
+              Password reset successfully. You can now sign in.
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
