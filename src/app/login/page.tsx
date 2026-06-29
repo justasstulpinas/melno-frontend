@@ -70,7 +70,7 @@ function LoginForm() {
 
           {passwordReset && (
             <p className={`${syne.className} text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 rounded-md px-3 py-2 mb-4`}>
-              Password reset successfully. You can now sign in.
+              Slaptažodis sėkmingai pakeistas. Galite prisijungti.
             </p>
           )}
 

@@ -17,14 +17,14 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("No verification token found in the link.");
+      setMessage("Patvirtinimo nuoroda nerasta.");
       return;
     }
     api.verifyEmail(token)
       .then(() => setStatus("success"))
       .catch((err: unknown) => {
         setStatus("error");
-        setMessage(err instanceof Error ? err.message : "Verification failed.");
+        setMessage(err instanceof Error ? err.message : "Patvirtinti nepavyko.");
       });
   }, [token]);
 
@@ -50,7 +50,7 @@ function VerifyEmailContent() {
           {status === "loading" && (
             <>
               <div className="w-8 h-8 border-2 border-zinc-700 border-t-white rounded-full animate-spin mx-auto mb-6" />
-              <p className={`${syne.className} text-sm text-zinc-400`}>Verifying your email…</p>
+              <p className={`${syne.className} text-sm text-zinc-400`}>Tikrinama el. pašto adresas…</p>
             </>
           )}
 
@@ -61,13 +61,13 @@ function VerifyEmailContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-semibold text-white mb-2">Email verified</h1>
-              <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>Your account is now active. You can sign in.</p>
+              <h1 className="text-2xl font-semibold text-white mb-2">El. paštas patvirtintas</h1>
+              <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>Jūsų paskyra aktyvuota. Galite prisijungti.</p>
               <Link
                 href="/login"
                 className="inline-block bg-white text-zinc-950 rounded-md px-6 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors"
               >
-                Sign in →
+                Prisijungti →
               </Link>
             </>
           )}
@@ -79,13 +79,13 @@ function VerifyEmailContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-semibold text-white mb-2">Verification failed</h1>
-              <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>{message || "This link is invalid or has already been used."}</p>
+              <h1 className="text-2xl font-semibold text-white mb-2">Patvirtinti nepavyko</h1>
+              <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>{message || "Ši nuoroda negalioja arba jau buvo panaudota."}</p>
               <Link
                 href="/login"
                 className="inline-block text-sm text-zinc-400 hover:text-white transition-colors"
               >
-                Back to login
+                Grįžti į prisijungimą
               </Link>
             </>
           )}

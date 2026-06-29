@@ -20,11 +20,11 @@ function ResetPasswordForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError("Slaptažodžiai nesutampa.");
       return;
     }
     if (!token) {
-      setError("Invalid reset link.");
+      setError("Neteisinga nuoroda.");
       return;
     }
     setError("");
@@ -33,7 +33,7 @@ function ResetPasswordForm() {
       await api.resetPassword(token, password);
       router.push("/login?reset=1");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Klaida. Bandykite dar kartą.");
     } finally {
       setLoading(false);
     }
@@ -58,12 +58,12 @@ function ResetPasswordForm() {
         <div className="w-full max-w-md">
           <Link href="/" className="block text-center text-base font-semibold text-white mb-10 lg:hidden tracking-tight">Melno</Link>
 
-          <h1 className="text-2xl font-semibold text-white mb-1">Set new password</h1>
-          <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>Choose a strong password for your account.</p>
+          <h1 className="text-2xl font-semibold text-white mb-1">Naujas slaptažodis</h1>
+          <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>Pasirinkite naują slaptažodį savo paskyrai.</p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>New password</label>
+              <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>Naujas slaptažodis</label>
               <input
                 type="password"
                 required
@@ -75,7 +75,7 @@ function ResetPasswordForm() {
               />
             </div>
             <div>
-              <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>Confirm password</label>
+              <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>Pakartokite slaptažodį</label>
               <input
                 type="password"
                 required
@@ -98,13 +98,13 @@ function ResetPasswordForm() {
               disabled={loading || !token}
               className="w-full bg-white text-zinc-950 rounded-md py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 active:scale-[0.98] mt-2"
             >
-              {loading ? "Saving…" : "Reset password"}
+              {loading ? "Išsaugoma…" : "Keisti slaptažodį"}
             </button>
           </form>
 
           <p className={`${syne.className} text-center text-sm text-zinc-500 mt-8`}>
             <Link href="/login" className="text-zinc-400 hover:text-white transition-colors">
-              ← Back to login
+              ← Grįžti į prisijungimą
             </Link>
           </p>
         </div>

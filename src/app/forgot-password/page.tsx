@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
       await api.forgotPassword(email);
       setSubmitted(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Klaida. Bandykite dar kartą.");
     } finally {
       setLoading(false);
     }
@@ -48,20 +48,20 @@ export default function ForgotPasswordPage() {
 
           {!submitted ? (
             <>
-              <h1 className="text-2xl font-semibold text-white mb-1">Forgot password?</h1>
+              <h1 className="text-2xl font-semibold text-white mb-1">Pamiršote slaptažodį?</h1>
               <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>
-                Enter your email and we&apos;ll send you a reset link.
+                Įveskite el. paštą ir atsiųsime slaptažodžio atnaujinimo nuorodą.
               </p>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
-                  <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>Email</label>
+                  <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>El. paštas</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="jusu@pastas.lt"
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-colors"
                   />
                 </div>
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
                   disabled={loading}
                   className="w-full bg-white text-zinc-950 rounded-md py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 active:scale-[0.98] mt-2"
                 >
-                  {loading ? "Sending…" : "Send reset link"}
+                  {loading ? "Siunčiama…" : "Siųsti nuorodą"}
                 </button>
               </form>
             </>
@@ -88,16 +88,16 @@ export default function ForgotPasswordPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-semibold text-white mb-2">Check your email</h1>
+              <h1 className="text-2xl font-semibold text-white mb-2">Patikrinkite el. paštą</h1>
               <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>
-                If an account exists for <span className="text-zinc-200">{email}</span>, you&apos;ll receive a reset link shortly.
+                Jei paskyra su adresu <span className="text-zinc-200">{email}</span> egzistuoja, netrukus gausite nuorodą.
               </p>
             </div>
           )}
 
           <p className={`${syne.className} text-center text-sm text-zinc-500 mt-8`}>
             <Link href="/login" className="text-zinc-400 hover:text-white transition-colors">
-              ← Back to login
+              ← Grįžti į prisijungimą
             </Link>
           </p>
         </div>
