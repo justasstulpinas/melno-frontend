@@ -112,6 +112,19 @@ export default function TemplateDetailPage() {
       setSubmissions((prev) => prev.map((s) => (s.id === submissionId ? updated : s)));
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Failed"); }
   }
+  async function handleCancel(submissionId: number) {
+    if (!confirm("Ar tikrai norite atšaukti šią sutartį?")) return;
+    try {
+      const updated = await api.cancelSubmission(submissionId);
+      setSubmissions((prev) => prev.map((s) => (s.id === submissionId ? updated : s)));
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Failed"); }
+  }
+  async function handleComplete(submissionId: number) {
+    try {
+      const updated = await api.completeSubmission(submissionId);
+      setSubmissions((prev) => prev.map((s) => (s.id === submissionId ? updated : s)));
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Failed"); }
+  }
 
   if (loading) return <div className="p-8 text-sm text-zinc-500">Kraunama…</div>;
   if (error) return <div className="p-8 text-sm text-red-400">{error}</div>;
@@ -139,6 +152,14 @@ export default function TemplateDetailPage() {
         onClose={() => setModalSubmission(null)}
         onConfirm={(id) => {
           setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" as const } : s));
+          setModalSubmission(null);
+        }}
+        onCancel={(id) => {
+          setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, status: "cancelled" as const } : s));
+          setModalSubmission(null);
+        }}
+        onComplete={(id) => {
+          setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, status: "completed" as const } : s));
           setModalSubmission(null);
         }}
       />
@@ -437,14 +458,18 @@ function LinkRow({ link, onRevoke }: { link: PublicLink; onRevoke: (id: number) 
 
 // ---- Submission modal ----
 
-function SubmissionModal({ submission: s, onClose, onConfirm }: {
+function SubmissionModal({ submission: s, onClose, onConfirm, onCancel, onComplete }: {
   submission: Submission;
   onClose: () => void;
   onConfirm: (id: number) => void;
+  onCancel: (id: number) => void;
+  onComplete: (id: number) => void;
 }) {
   const [html, setHtml] = useState<string | null>(null);
   const [tab, setTab] = useState<"info" | "preview">("info");
   const [confirming, setConfirming] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -464,6 +489,23 @@ function SubmissionModal({ submission: s, onClose, onConfirm }: {
       onConfirm(s.id);
       onClose();
     } finally { setConfirming(false); }
+  }
+  async function handleCancel() {
+    if (!confirm("Ar tikrai norite atšaukti šią sutartį?")) return;
+    setCancelling(true);
+    try {
+      await api.cancelSubmission(s.id);
+      onCancel(s.id);
+      onClose();
+    } finally { setCancelling(false); }
+  }
+  async function handleComplete() {
+    setCompleting(true);
+    try {
+      await api.completeSubmission(s.id);
+      onComplete(s.id);
+      onClose();
+    } finally { setCompleting(false); }
   }
 
   const statusStyle: Record<string, string> = {
@@ -495,10 +537,28 @@ function SubmissionModal({ submission: s, onClose, onConfirm }: {
           </div>
           <div className="flex items-center gap-3 shrink-0 ml-4">
             {s.status === "submitted" && (
-              <button onClick={handleConfirm} disabled={confirming}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50">
-                {confirming ? "Tvirtinama…" : "Patvirtinti"}
-              </button>
+              <>
+                <button onClick={handleConfirm} disabled={confirming}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50">
+                  {confirming ? "Tvirtinama…" : "Patvirtinti"}
+                </button>
+                <button onClick={handleCancel} disabled={cancelling}
+                  className="text-xs text-zinc-400 hover:text-red-400 px-3 py-2 rounded-md transition-colors disabled:opacity-50">
+                  {cancelling ? "Atšaukiama…" : "Atšaukti"}
+                </button>
+              </>
+            )}
+            {s.status === "confirmed" && (
+              <>
+                <button onClick={handleComplete} disabled={completing}
+                  className="bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50">
+                  {completing ? "Baigiama…" : "Baigti sutartį"}
+                </button>
+                <button onClick={handleCancel} disabled={cancelling}
+                  className="text-xs text-zinc-400 hover:text-red-400 px-3 py-2 rounded-md transition-colors disabled:opacity-50">
+                  {cancelling ? "Atšaukiama…" : "Atšaukti"}
+                </button>
+              </>
             )}
             <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -121,6 +121,12 @@ export const api = {
   confirmSubmission(id: number) {
     return request<Submission>(`/contracts/submissions/${id}/confirm`, { method: "POST" });
   },
+  cancelSubmission(id: number) {
+    return request<Submission>(`/contracts/submissions/${id}/cancel`, { method: "POST" });
+  },
+  completeSubmission(id: number) {
+    return request<Submission>(`/contracts/submissions/${id}/complete`, { method: "POST" });
+  },
   getSubmissionHtml(id: number) {
     return request<{ html: string }>(`/contracts/submissions/${id}/document`);
   },
@@ -134,6 +140,9 @@ export const api = {
   },
   updateContact(id: number, data: Partial<{ name: string; email: string; phone: string; address: string }>) {
     return request<Contact>(`/contacts/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteContact(id: number) {
+    return request<void>(`/contacts/${id}`, { method: "DELETE" });
   },
 
   // Profile

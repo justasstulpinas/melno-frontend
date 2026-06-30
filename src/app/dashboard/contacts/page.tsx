@@ -17,6 +17,16 @@ export default function ContactsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  async function handleDelete(id: number) {
+    if (!confirm("Ištrinti šį kontaktą?")) return;
+    try {
+      await api.deleteContact(id);
+      setContacts((prev) => prev.filter((c) => c.id !== id));
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -119,13 +129,21 @@ export default function ContactsPage() {
       {contacts.length > 0 && (
         <div className="flex flex-col gap-2">
           {contacts.map((c) => (
-            <div key={c.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
-              <p className="text-sm font-medium text-white">{c.name ?? "Be vardo"}</p>
-              <div className="flex gap-4 mt-0.5">
-                {c.email && <p className="text-xs text-zinc-500">{c.email}</p>}
-                {c.phone && <p className="text-xs text-zinc-500">{c.phone}</p>}
-                {c.address && <p className="text-xs text-zinc-500">{c.address}</p>}
+            <div key={c.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white">{c.name ?? "Be vardo"}</p>
+                <div className="flex gap-4 mt-0.5">
+                  {c.email && <p className="text-xs text-zinc-500">{c.email}</p>}
+                  {c.phone && <p className="text-xs text-zinc-500">{c.phone}</p>}
+                  {c.address && <p className="text-xs text-zinc-500">{c.address}</p>}
+                </div>
               </div>
+              <button
+                onClick={() => handleDelete(c.id)}
+                className="text-xs text-zinc-600 hover:text-red-400 transition-colors shrink-0"
+              >
+                Ištrinti
+              </button>
             </div>
           ))}
         </div>
