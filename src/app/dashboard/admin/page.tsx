@@ -125,6 +125,10 @@ export default function AdminPage() {
                     await api.adminDeleteUser(id);
                     setUsers((prev) => prev.filter((x) => x.id !== id));
                   }}
+                  onVerify={async (id) => {
+                    await api.adminVerifyUser(id);
+                    setUsers((prev) => prev.map((x) => x.id === id ? { ...x, is_verified: true, is_suspended: false } : x));
+                  }}
                 />
               ))}
             </tbody>
@@ -203,19 +207,39 @@ function UserRow({
   user: u,
   onSuspend,
   onDelete,
+  onVerify,
 }: {
   user: AdminUser;
   onSuspend: (id: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onVerify: (id: number) => Promise<void>;
 }) {
   const [loadingSuspend, setLoadingSuspend] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  function copyEmail() {
+    navigator.clipboard.writeText(u.email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
-    <tr className={`hover:bg-zinc-800/50 transition-colors ${u.is_suspended ? "opacity-50" : ""}`}>
+    <tr className={`hover:bg-zinc-800/50 transition-colors ${u.is_suspended ? "opacity-60" : ""}`}>
       <td className="px-4 py-3">
-        <p className="text-white text-sm">{u.email}</p>
-        <p className="text-xs text-zinc-600 font-mono">#{u.id} {u.is_verified ? "· ✓" : "· nepatvirtintas"}</p>
+        <div className="flex items-center gap-2">
+          <div>
+            <p className="text-white text-sm">{u.email}</p>
+            <p className="text-xs text-zinc-600 font-mono">#{u.id} · reg. {u.created_at ? fmtDate(u.created_at) : "—"}</p>
+          </div>
+          <button onClick={copyEmail} className="text-zinc-600 hover:text-zinc-300 transition-colors shrink-0" title="Kopijuoti el. paštą">
+            {copied
+              ? <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            }
+          </button>
+        </div>
       </td>
       <td className="px-4 py-3">
         <div className="flex gap-1 flex-wrap">
@@ -227,12 +251,24 @@ function UserRow({
       <td className="px-4 py-3 text-sm text-zinc-400">{u.template_count}</td>
       <td className="px-4 py-3 text-xs text-zinc-500">{u.last_login ? fmtDate(u.last_login) : "—"}</td>
       <td className="px-4 py-3">
-        {u.is_suspended
-          ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-950 text-red-400">Sustabdytas</span>
-          : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400">Aktyvus</span>}
+        <div className="flex flex-col gap-1">
+          {u.is_suspended
+            ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-950 text-red-400 w-fit">Sustabdytas</span>
+            : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 w-fit">Aktyvus</span>}
+          {!u.is_verified && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-950 text-yellow-400 w-fit">Nepatvirtintas</span>}
+        </div>
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {!u.is_verified && (
+            <button
+              onClick={async () => { setLoadingVerify(true); try { await onVerify(u.id); } finally { setLoadingVerify(false); } }}
+              disabled={loadingVerify}
+              className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors disabled:opacity-50"
+            >
+              {loadingVerify ? "…" : "Patvirtinti"}
+            </button>
+          )}
           <button
             onClick={async () => { setLoadingSuspend(true); try { await onSuspend(u.id); } finally { setLoadingSuspend(false); } }}
             disabled={loadingSuspend}

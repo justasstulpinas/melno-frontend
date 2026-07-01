@@ -164,6 +164,9 @@ export const api = {
   adminDeleteUser(id: number) {
     return request<{ status: string }>(`/admin/users/${id}`, { method: "DELETE" });
   },
+  adminVerifyUser(id: number) {
+    return request<{ id: number; is_verified: boolean; is_suspended: boolean }>(`/admin/users/${id}/verify`, { method: "PATCH" });
+  },
   adminAnalyticsSubmissions() {
     return request<ChartPoint[]>("/admin/analytics/submissions");
   },
@@ -255,6 +258,7 @@ export type AdminUser = {
   is_suspended: boolean;
   roles: string[];
   last_login: string | null;
+  created_at: string | null;
   template_count: number;
 };
 
