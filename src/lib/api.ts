@@ -158,6 +158,12 @@ export const api = {
   adminSubmissions() {
     return request<AdminSubmission[]>("/admin/submissions");
   },
+  adminToggleSuspend(id: number) {
+    return request<{ id: number; is_suspended: boolean }>(`/admin/users/${id}/suspend`, { method: "PATCH" });
+  },
+  adminDeleteUser(id: number) {
+    return request<{ status: string }>(`/admin/users/${id}`, { method: "DELETE" });
+  },
   adminAnalyticsSubmissions() {
     return request<ChartPoint[]>("/admin/analytics/submissions");
   },
@@ -246,7 +252,10 @@ export type AdminUser = {
   id: number;
   email: string;
   is_verified: boolean;
+  is_suspended: boolean;
   roles: string[];
+  last_login: string | null;
+  template_count: number;
 };
 
 export type AdminTemplate = {

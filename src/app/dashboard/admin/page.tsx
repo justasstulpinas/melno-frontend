@@ -103,30 +103,29 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">El. paštas</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Rolės</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Patvirtintas</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Šablonai</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Pask. prisij.</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Būsena</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Veiksmai</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-zinc-800/50 transition-colors">
-                  <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{u.id}</td>
-                  <td className="px-4 py-3 text-white">{u.email}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 flex-wrap">
-                      {u.roles.map((r) => (
-                        <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">{r}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.is_verified
-                      ? <span className="text-xs text-emerald-400">✓ Taip</span>
-                      : <span className="text-xs text-zinc-500">Ne</span>}
-                  </td>
-                </tr>
+                <UserRow
+                  key={u.id}
+                  user={u}
+                  onSuspend={async (id) => {
+                    const updated = await api.adminToggleSuspend(id);
+                    setUsers((prev) => prev.map((x) => x.id === id ? { ...x, is_suspended: updated.is_suspended } : x));
+                  }}
+                  onDelete={async (id) => {
+                    if (!confirm("Ištrinti šį vartotoją? Visi jo duomenys bus prarasti.")) return;
+                    await api.adminDeleteUser(id);
+                    setUsers((prev) => prev.filter((x) => x.id !== id));
+                  }}
+                />
               ))}
             </tbody>
           </table>
@@ -197,6 +196,60 @@ export default function AdminPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function UserRow({
+  user: u,
+  onSuspend,
+  onDelete,
+}: {
+  user: AdminUser;
+  onSuspend: (id: number) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
+}) {
+  const [loadingSuspend, setLoadingSuspend] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  return (
+    <tr className={`hover:bg-zinc-800/50 transition-colors ${u.is_suspended ? "opacity-50" : ""}`}>
+      <td className="px-4 py-3">
+        <p className="text-white text-sm">{u.email}</p>
+        <p className="text-xs text-zinc-600 font-mono">#{u.id} {u.is_verified ? "· ✓" : "· nepatvirtintas"}</p>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex gap-1 flex-wrap">
+          {u.roles.map((r) => (
+            <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">{r}</span>
+          ))}
+        </div>
+      </td>
+      <td className="px-4 py-3 text-sm text-zinc-400">{u.template_count}</td>
+      <td className="px-4 py-3 text-xs text-zinc-500">{u.last_login ? fmtDate(u.last_login) : "—"}</td>
+      <td className="px-4 py-3">
+        {u.is_suspended
+          ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-950 text-red-400">Sustabdytas</span>
+          : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400">Aktyvus</span>}
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={async () => { setLoadingSuspend(true); try { await onSuspend(u.id); } finally { setLoadingSuspend(false); } }}
+            disabled={loadingSuspend}
+            className="text-xs text-zinc-400 hover:text-yellow-400 transition-colors disabled:opacity-50"
+          >
+            {loadingSuspend ? "…" : u.is_suspended ? "Atblokuoti" : "Sustabdyti"}
+          </button>
+          <button
+            onClick={async () => { setLoadingDelete(true); try { await onDelete(u.id); } finally { setLoadingDelete(false); } }}
+            disabled={loadingDelete}
+            className="text-xs text-zinc-400 hover:text-red-400 transition-colors disabled:opacity-50"
+          >
+            {loadingDelete ? "…" : "Ištrinti"}
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
