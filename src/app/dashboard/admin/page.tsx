@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api, AdminStats, AdminUser, AdminTemplate, AdminSubmission } from "@/lib/api";
 
 function fmtDate(iso: string | null) {
@@ -69,6 +70,19 @@ export default function AdminPage() {
           <StatCard label="Patvirtintos" value={stats.confirmed_submissions} color="emerald" />
         </div>
       )}
+
+      {/* Analytics link */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard/admin/analytics"
+          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Peržiūrėti analitiką →
+        </Link>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6">

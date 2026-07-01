@@ -158,6 +158,15 @@ export const api = {
   adminSubmissions() {
     return request<AdminSubmission[]>("/admin/submissions");
   },
+  adminAnalyticsSubmissions() {
+    return request<ChartPoint[]>("/admin/analytics/submissions");
+  },
+  adminAnalyticsUserGrowth() {
+    return request<ChartPoint[]>("/admin/analytics/user-growth");
+  },
+  adminAnalyticsActiveUsers() {
+    return request<ChartPoint[]>("/admin/analytics/active-users");
+  },
 
   // Profile
   getProfile() {
@@ -219,6 +228,11 @@ export type Contact = {
   email: string | null;
   phone: string | null;
   address: string | null;
+};
+
+export type ChartPoint = {
+  date: string;
+  count: number;
 };
 
 export type AdminStats = {
