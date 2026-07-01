@@ -321,7 +321,7 @@ export default function SignPage() {
                   <mark style={{ background: "#fef9c3", color: "#713f12", padding: "0 3px", borderRadius: 3 }}>geltonai</mark>.
                 </p>
                 <div className="bg-[#c8c8c8] rounded-xl py-4 px-2 sm:py-10 sm:px-8 shadow-inner overflow-x-auto">
-                  <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)] w-full" style={{ maxWidth: 794, minHeight: 600 }}>
+                  <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)] w-full" style={{ maxWidth: 794, minHeight: 1123 }}>
                     <div
                       style={{
                         padding: "clamp(24px, 6vw, 91px) clamp(16px, 5vw, 61px) clamp(20px, 5vw, 76px)",
