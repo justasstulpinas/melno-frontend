@@ -64,7 +64,7 @@ export default function SuspendedPage() {
             Jei manote, kad tai klaida, arba norite atblokuoti paskyrą — susisiekite su mumis:
           </p>
 
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center justify-center gap-2 mb-6">
             <a
               href="mailto:support@melno.app"
               className="inline-block bg-white text-zinc-950 rounded-md px-6 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors"
@@ -74,22 +74,16 @@ export default function SuspendedPage() {
             <button
               onClick={copyEmail}
               title="Kopijuoti el. paštą"
-              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 px-3 py-2.5 rounded-md transition-colors"
+              className="flex items-center justify-center text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 p-2.5 rounded-md transition-colors"
             >
               {copied ? (
-                <>
-                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-emerald-400">Nukopijuota</span>
-                </>
+                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               ) : (
-                <>
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Kopijuoti
-                </>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
               )}
             </button>
           </div>
