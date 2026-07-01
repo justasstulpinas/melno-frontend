@@ -470,7 +470,42 @@ function SubmissionModal({ submission: s, onClose, onConfirm, onCancel, onComple
   const [confirming, setConfirming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const [contactSaved, setContactSaved] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  function extractContact(data: Record<string, string>, email: string | null) {
+    const find = (...keys: string[]) =>
+      keys.map((k) => Object.entries(data).find(([key]) => key.toLowerCase().includes(k))?.[1]).find(Boolean) ?? null;
+    return {
+      name: find("name", "vardas", "pavadinimas"),
+      email: find("email", "pastas", "mail") ?? email,
+      phone: find("phone", "tel", "mob", "gsm"),
+      address: find("address", "adresas", "addr"),
+    };
+  }
+
+  async function handleSaveContact() {
+    const contact = extractContact(s.submitted_data, s.submitter_email ?? null);
+    if (!contact.name && !contact.email && !contact.phone && !contact.address) {
+      alert("Nerasta kontaktinės informacijos šioje sutartyje.");
+      return;
+    }
+    setSavingContact(true);
+    try {
+      await api.createContact({
+        name: contact.name ?? undefined,
+        email: contact.email ?? undefined,
+        phone: contact.phone ?? undefined,
+        address: contact.address ?? undefined,
+      });
+      setContactSaved(true);
+    } catch {
+      alert("Nepavyko išsaugoti kontakto.");
+    } finally {
+      setSavingContact(false);
+    }
+  }
 
   useEffect(() => {
     api.getSubmissionHtml(s.id).then(({ html }) => setHtml(html)).catch(() => {});
@@ -597,9 +632,16 @@ function SubmissionModal({ submission: s, onClose, onConfirm, onCancel, onComple
                   </div>
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <DownloadBtn submissionId={s.id} format="pdf" label="Atsisiųsti PDF" />
                 <DownloadBtn submissionId={s.id} format="docx" label="Atsisiųsti DOCX" />
+                <button
+                  onClick={handleSaveContact}
+                  disabled={savingContact || contactSaved}
+                  className="text-xs text-zinc-400 hover:text-emerald-400 border border-zinc-700 hover:border-emerald-800 px-3 py-2 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {contactSaved ? "✓ Kontaktas išsaugotas" : savingContact ? "Išsaugoma…" : "+ Išsaugoti kaip kontaktą"}
+                </button>
               </div>
             </div>
           ) : (
