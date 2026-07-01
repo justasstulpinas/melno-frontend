@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api, Template, PublicLink, Profile } from "@/lib/api";
+import { ContactEmailPicker } from "@/components/ContactEmailPicker";
 
 const PROFILE_MAP: Record<string, keyof Profile> = {
   owner_name: "profile_name",
@@ -290,13 +291,7 @@ export default function ShareLinkPage() {
           <div>
             <p className="text-xs text-zinc-400 mb-2">Siųsti tiesiogiai el. paštu</p>
             <div className="flex items-center gap-2">
-              <input
-                type="email"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                placeholder="kliento@pastas.lt"
-                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
-              />
+              <ContactEmailPicker value={recipientEmail} onChange={setRecipientEmail} />
               <a
                 href={recipientEmail ? (() => {
                   const subject = encodeURIComponent(`Sutartis pasirašymui: ${template?.name}`);

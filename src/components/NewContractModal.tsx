@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, Template, PublicLink, Profile } from "@/lib/api";
+import { ContactEmailPicker } from "@/components/ContactEmailPicker";
 
 const PROFILE_MAP: Record<string, keyof Profile> = {
   owner_name: "profile_name",
@@ -273,13 +274,7 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
 
               <p className="text-xs text-zinc-400">Siųsti tiesiogiai el. paštu</p>
               <div className="flex items-center gap-2">
-                <input
-                  type="email"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  placeholder="kliento@pastas.lt"
-                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
-                />
+                <ContactEmailPicker value={recipientEmail} onChange={setRecipientEmail} />
                 <a
                   href={recipientEmail && generatedLink ? (() => {
                     const subject = encodeURIComponent(`Sutartis pasirašymui: ${selected?.name}`);
