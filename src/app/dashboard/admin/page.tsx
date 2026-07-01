@@ -109,6 +109,7 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
+                <SortableHeader label="ID" colKey="id" sortKey={uKey as string} sortDir={uDir} onSort={(k) => toggleU(k as keyof Record<string, unknown>)} className="w-16" />
                 <SortableHeader label="El. paštas" colKey="email" sortKey={uKey as string} sortDir={uDir} onSort={(k) => toggleU(k as keyof Record<string, unknown>)} />
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Rolės</th>
                 <SortableHeader label="Šablonai" colKey="template_count" sortKey={uKey as string} sortDir={uDir} onSort={(k) => toggleU(k as keyof Record<string, unknown>)} />
@@ -148,7 +149,7 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
+                <SortableHeader label="ID" colKey="id" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} className="w-16" />
                 <SortableHeader label="Pavadinimas" colKey="name" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} />
                 <SortableHeader label="Savininkas" colKey="owner_email" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} />
                 <SortableHeader label="Būsena" colKey="status" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} />
@@ -178,7 +179,7 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
+                <SortableHeader label="ID" colKey="id" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} className="w-16" />
                 <SortableHeader label="Šablonas" colKey="template_name" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
                 <SortableHeader label="Pateikė" colKey="submitter_email" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
                 <SortableHeader label="Savininkas" colKey="owner_email" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
@@ -233,6 +234,7 @@ function UserRow({
 
   return (
     <tr className={`hover:bg-zinc-800/50 transition-colors ${u.is_suspended ? "opacity-60" : ""}`}>
+      <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{u.id}</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <div>

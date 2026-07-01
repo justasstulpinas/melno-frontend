@@ -12,6 +12,14 @@ import {
 } from "recharts";
 import { api, ChartPoint } from "@/lib/api";
 
+const RANGES = [
+  { label: "1 savaitė", days: 7 },
+  { label: "1 mėnuo", days: 30 },
+  { label: "Ketvirtis", days: 90 },
+  { label: "Metai", days: 365 },
+  { label: "Visas laikas", days: 0 },
+];
+
 function AdminChart({
   title,
   description,
@@ -75,6 +83,7 @@ function AdminChart({
 }
 
 export default function AdminAnalyticsPage() {
+  const [days, setDays] = useState(30);
   const [submissions, setSubmissions] = useState<ChartPoint[]>([]);
   const [userGrowth, setUserGrowth] = useState<ChartPoint[]>([]);
   const [activeUsers, setActiveUsers] = useState<ChartPoint[]>([]);
@@ -82,10 +91,11 @@ export default function AdminAnalyticsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([
-      api.adminAnalyticsSubmissions(),
-      api.adminAnalyticsUserGrowth(),
-      api.adminAnalyticsActiveUsers(),
+      api.adminAnalyticsSubmissions(days),
+      api.adminAnalyticsUserGrowth(days),
+      api.adminAnalyticsActiveUsers(days),
     ])
       .then(([s, u, a]) => {
         setSubmissions(s);
@@ -94,38 +104,56 @@ export default function AdminAnalyticsPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [days]);
 
-  if (loading) return <div className="p-8 text-sm text-zinc-500">Kraunama…</div>;
   if (error) return <div className="p-8 text-sm text-red-400">{error}</div>;
 
   return (
     <div className="p-8 max-w-5xl">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold text-white mb-1">Analitika</h1>
-        <p className="text-sm text-zinc-400">Paskutinės 30 dienų veikla.</p>
+        <p className="text-sm text-zinc-400">Sistemos veiklos apžvalga.</p>
       </div>
 
-      <div className="flex flex-col gap-6">
-        <AdminChart
-          title="Pateiktos sutartys"
-          description="Sutarčių pateikimai per dieną"
-          data={submissions}
-          color="#34d399"
-        />
-        <AdminChart
-          title="Naujų vartotojų augimas"
-          description="Naujai užsiregistravę vartotojai per dieną"
-          data={userGrowth}
-          color="#818cf8"
-        />
-        <AdminChart
-          title="Aktyvūs vartotojai"
-          description="Vartotojai, kurie prisijungė per dieną"
-          data={activeUsers}
-          color="#38bdf8"
-        />
+      {/* Time range selector */}
+      <div className="flex gap-1 mb-8 bg-zinc-900 border border-zinc-800 rounded-lg p-1 w-fit">
+        {RANGES.map((r) => (
+          <button
+            key={r.days}
+            onClick={() => setDays(r.days)}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              days === r.days ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
       </div>
+
+      {loading ? (
+        <div className="text-sm text-zinc-500">Kraunama…</div>
+      ) : (
+        <div className="flex flex-col gap-6">
+          <AdminChart
+            title="Pateiktos sutartys"
+            description="Sutarčių pateikimai per dieną"
+            data={submissions}
+            color="#34d399"
+          />
+          <AdminChart
+            title="Naujų vartotojų augimas"
+            description="Naujai užsiregistravę vartotojai per dieną"
+            data={userGrowth}
+            color="#818cf8"
+          />
+          <AdminChart
+            title="Aktyvūs vartotojai"
+            description="Vartotojai, kurie prisijungė per dieną"
+            data={activeUsers}
+            color="#38bdf8"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -62,6 +62,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     api.me().then((user) => {
+      if (user.is_suspended) {
+        router.push("/suspended");
+        return;
+      }
       setIsAdmin(user.roles.includes("admin"));
     }).catch(() => {});
   }, []);

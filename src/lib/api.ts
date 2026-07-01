@@ -47,7 +47,7 @@ export const api = {
     });
   },
   me() {
-    return request<{ id: number; email: string; roles: string[] }>("/auth/me");
+    return request<{ id: number; email: string; roles: string[]; is_suspended: boolean }>("/auth/me");
   },
   logout() {
     return request<{ status: string }>("/auth/logout", { method: "POST" });
@@ -167,14 +167,14 @@ export const api = {
   adminVerifyUser(id: number) {
     return request<{ id: number; is_verified: boolean; is_suspended: boolean }>(`/admin/users/${id}/verify`, { method: "PATCH" });
   },
-  adminAnalyticsSubmissions() {
-    return request<ChartPoint[]>("/admin/analytics/submissions");
+  adminAnalyticsSubmissions(days: number) {
+    return request<ChartPoint[]>(`/admin/analytics/submissions?days=${days}`);
   },
-  adminAnalyticsUserGrowth() {
-    return request<ChartPoint[]>("/admin/analytics/user-growth");
+  adminAnalyticsUserGrowth(days: number) {
+    return request<ChartPoint[]>(`/admin/analytics/user-growth?days=${days}`);
   },
-  adminAnalyticsActiveUsers() {
-    return request<ChartPoint[]>("/admin/analytics/active-users");
+  adminAnalyticsActiveUsers(days: number) {
+    return request<ChartPoint[]>(`/admin/analytics/active-users?days=${days}`);
   },
 
   // Profile

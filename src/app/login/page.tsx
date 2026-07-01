@@ -29,12 +29,7 @@ function LoginForm() {
       else localStorage.removeItem("remember");
       router.push("/dashboard");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Prisijungti nepavyko";
-      if (msg.toLowerCase().includes("suspended")) {
-        router.push("/suspended");
-        return;
-      }
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Prisijungti nepavyko");
     } finally {
       setLoading(false);
     }
