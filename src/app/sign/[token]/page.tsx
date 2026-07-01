@@ -158,8 +158,8 @@ export default function SignPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-center max-w-sm">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+        <div className="text-center max-w-sm w-full">
           <div className="w-12 h-12 bg-emerald-950 border border-emerald-800 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -174,8 +174,8 @@ export default function SignPage() {
 
   if (declined) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-center max-w-sm">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+        <div className="text-center max-w-sm w-full">
           <div className="w-12 h-12 bg-red-950 border border-red-800 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -212,22 +212,22 @@ export default function SignPage() {
     }`;
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-10 px-4">
+    <div className="min-h-screen bg-zinc-950 py-6 px-4">
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <p className="text-xs text-zinc-500 mb-1">Sutartis pasirašymui</p>
-          <h1 className="text-2xl font-semibold text-white">{template!.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-white">{template!.name}</h1>
           {template!.description && <p className="text-sm text-zinc-400 mt-1">{template!.description}</p>}
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1 mb-6 w-fit">
-          <button type="button" className={tabClass("preview")} onClick={() => setTab("preview")}>
+        <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1 mb-5 w-full sm:w-fit">
+          <button type="button" className={`${tabClass("preview")} flex-1 sm:flex-none`} onClick={() => setTab("preview")}>
             Sutartis
           </button>
-          <button type="button" className={tabClass("fill")} onClick={() => setTab("fill")}>
+          <button type="button" className={`${tabClass("fill")} flex-1 sm:flex-none`} onClick={() => setTab("fill")}>
             Pildyti ir pasirašyti
           </button>
         </div>
@@ -235,22 +235,22 @@ export default function SignPage() {
         {/* Contract preview tab */}
         {tab === "preview" && (
           <div>
-            <p className="text-xs text-zinc-500 mb-4">
+            <p className="text-xs text-zinc-500 mb-3">
               Nepildyti laukai pažymėti{" "}
               <mark style={{ background: "#fee2e2", color: "#991b1b", padding: "0 3px", borderRadius: 3 }}>raudonai</mark>
               , užpildyti —{" "}
               <mark style={{ background: "#fef9c3", color: "#713f12", padding: "0 3px", borderRadius: 3 }}>geltonai</mark>.
             </p>
-            <div className="bg-[#c8c8c8] rounded-xl py-10 px-8 shadow-inner">
+            <div className="bg-[#c8c8c8] rounded-xl py-4 px-2 sm:py-10 sm:px-8 shadow-inner overflow-x-auto">
               <div
                 className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
-                style={{ maxWidth: 794, minHeight: 1123 }}
+                style={{ maxWidth: 794, minWidth: 0 }}
               >
                 <div
                   style={{
-                    padding: "91px 61px 76px 61px",
+                    padding: "clamp(24px, 6vw, 91px) clamp(16px, 5vw, 61px) clamp(20px, 5vw, 76px)",
                     fontFamily: "'Times New Roman', Times, serif",
-                    fontSize: 16,
+                    fontSize: "clamp(13px, 2.5vw, 16px)",
                     lineHeight: 1.6,
                     color: "#18181b",
                   }}
@@ -282,9 +282,9 @@ export default function SignPage() {
 
         {/* Fill + sign tab */}
         {tab === "fill" && (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {publicFields.length > 0 && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6 flex flex-col gap-4">
                 <h2 className="text-sm font-semibold text-white">Užpildykite duomenis</h2>
                 {publicFields.map((field) => (
                   <div key={field}>
@@ -315,7 +315,7 @@ export default function SignPage() {
             )}
 
             {/* Signature */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h2 className="text-sm font-semibold text-white">Parašas</h2>
@@ -332,14 +332,15 @@ export default function SignPage() {
               <canvas
                 ref={canvasRef}
                 width={560}
-                height={140}
+                height={160}
                 className="w-full border border-zinc-700 rounded-md bg-white touch-none cursor-crosshair"
+                style={{ touchAction: "none" }}
                 onMouseDown={startDraw}
                 onMouseMove={draw}
                 onMouseUp={stopDraw}
                 onMouseLeave={stopDraw}
-                onTouchStart={startDraw}
-                onTouchMove={draw}
+                onTouchStart={(e) => { e.preventDefault(); startDraw(e); }}
+                onTouchMove={(e) => { e.preventDefault(); draw(e); }}
                 onTouchEnd={stopDraw}
               />
               <p className="text-xs text-zinc-600 mt-2">Nubrėžkite parašą viršuje (neprivaloma)</p>
@@ -365,18 +366,18 @@ export default function SignPage() {
               </p>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={() => setTab("preview")}
-                className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2.5"
+                className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2.5 text-center"
               >
                 ← Peržiūrėti sutartį
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-white text-zinc-950 px-6 py-2.5 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                className="flex-1 bg-white text-zinc-950 px-6 py-3 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
               >
                 {submitting ? "Teikiama…" : "Pateikti ir pasirašyti"}
               </button>
