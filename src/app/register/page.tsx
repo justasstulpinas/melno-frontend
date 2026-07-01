@@ -22,7 +22,7 @@ export default function RegisterPage() {
     try {
       await api.register(email, password);
       const data = await api.login(email, password);
-      saveToken(data.access_token);
+      saveToken(data.access_token, false);
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registracija nepavyko");
