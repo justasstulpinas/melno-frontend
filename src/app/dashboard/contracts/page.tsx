@@ -39,15 +39,21 @@ function ContractModal({
   item,
   onClose,
   onConfirm,
+  onCancel,
+  onComplete,
 }: {
   item: SubmissionListItem;
   onClose: () => void;
   onConfirm: (id: number) => void;
+  onCancel: (id: number) => void;
+  onComplete: (id: number) => void;
 }) {
   const [html, setHtml] = useState<string | null>(null);
   const [full, setFull] = useState<Submission | null>(null);
   const [loadingDoc, setLoadingDoc] = useState(true);
   const [confirming, setConfirming] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [tab, setTab] = useState<"info" | "preview">("info");
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +83,29 @@ function ContractModal({
       onClose();
     } finally {
       setConfirming(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!confirm("Ar tikrai norite atšaukti šią sutartį?")) return;
+    setCancelling(true);
+    try {
+      await api.cancelSubmission(item.id);
+      onCancel(item.id);
+      onClose();
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  async function handleComplete() {
+    setCompleting(true);
+    try {
+      await api.completeSubmission(item.id);
+      onComplete(item.id);
+      onClose();
+    } finally {
+      setCompleting(false);
     }
   }
 
@@ -113,13 +142,40 @@ function ContractModal({
           </div>
           <div className="flex items-center gap-3 shrink-0 ml-4">
             {item.status === "submitted" && (
-              <button
-                onClick={handleConfirm}
-                disabled={confirming}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50"
-              >
-                {confirming ? "Tvirtinama…" : "Patvirtinti sutartį"}
-              </button>
+              <>
+                <button
+                  onClick={handleConfirm}
+                  disabled={confirming}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {confirming ? "Tvirtinama…" : "Patvirtinti"}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="text-xs text-zinc-400 hover:text-red-400 px-3 py-2 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {cancelling ? "Atšaukiama…" : "Atšaukti"}
+                </button>
+              </>
+            )}
+            {item.status === "confirmed" && (
+              <>
+                <button
+                  onClick={handleComplete}
+                  disabled={completing}
+                  className="bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {completing ? "Baigiama…" : "Baigti sutartį"}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="text-xs text-zinc-400 hover:text-red-400 px-3 py-2 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {cancelling ? "Atšaukiama…" : "Atšaukti"}
+                </button>
+              </>
             )}
             <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,6 +382,18 @@ function ContractsPageInner() {
     );
   }
 
+  function handleCancel(id: number) {
+    setSubmissions((prev) =>
+      prev.map((s) => s.id === id ? { ...s, status: "cancelled" as const } : s)
+    );
+  }
+
+  function handleComplete(id: number) {
+    setSubmissions((prev) =>
+      prev.map((s) => s.id === id ? { ...s, status: "completed" as const } : s)
+    );
+  }
+
   const { sorted: sortedSubmissions, sortKey: subSortKey, sortDir: subSortDir, toggleSort: toggleSubSort } = useSortable(
     submissions as unknown as Record<string, unknown>[],
     "submitted_at",
@@ -360,6 +428,8 @@ function ContractsPageInner() {
           item={modal}
           onClose={() => setModal(null)}
           onConfirm={handleConfirm}
+          onCancel={handleCancel}
+          onComplete={handleComplete}
         />
       )}
 
