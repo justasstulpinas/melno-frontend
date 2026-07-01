@@ -34,6 +34,8 @@ export default function SignPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [declined, setDeclined] = useState(false);
+  const [declining, setDeclining] = useState(false);
   const [error, setError] = useState("");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -121,6 +123,20 @@ export default function SignPage() {
     }
   }
 
+  async function handleDecline() {
+    if (!confirm("Ar tikrai norite atmesti šią sutartį? Savininkas gaus pranešimą.")) return;
+    setDeclining(true);
+    try {
+      await fetch(`${BASE_URL}/links/public/${token}/decline`, { method: "POST" });
+      setDeclined(true);
+    } catch {
+      // silently fail — still show declined screen
+      setDeclined(true);
+    } finally {
+      setDeclining(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -151,6 +167,22 @@ export default function SignPage() {
           </div>
           <h1 className="text-xl font-semibold text-white mb-2">Pateikta!</h1>
           <p className="text-sm text-zinc-400">Jūsų sutartis pateikta. Patikrinkite el. paštą dėl patvirtinimo.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (declined) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center max-w-sm">
+          <div className="w-12 h-12 bg-red-950 border border-red-800 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold text-white mb-2">Sutartis atmesta</h1>
+          <p className="text-sm text-zinc-400">Sutarties savininkas buvo informuotas apie jūsų sprendimą.</p>
         </div>
       </div>
     );
@@ -228,7 +260,15 @@ export default function SignPage() {
                 />
               </div>
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleDecline}
+                disabled={declining}
+                className="text-sm text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-50"
+              >
+                {declining ? "Atmetama…" : "Atmesti sutartį"}
+              </button>
               <button
                 type="button"
                 onClick={() => setTab("fill")}
