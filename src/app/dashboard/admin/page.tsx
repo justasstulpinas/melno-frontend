@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api, AdminStats, AdminUser, AdminTemplate, AdminSubmission } from "@/lib/api";
+import { useSortable } from "@/hooks/useSortable";
+import { SortableHeader } from "@/components/SortableHeader";
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
@@ -45,6 +47,10 @@ export default function AdminPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const { sorted: sortedUsers, sortKey: uKey, sortDir: uDir, toggleSort: toggleU } = useSortable(users as unknown as Record<string, unknown>[], "email");
+  const { sorted: sortedTemplates, sortKey: tKey, sortDir: tDir, toggleSort: toggleT } = useSortable(templates as unknown as Record<string, unknown>[], "name");
+  const { sorted: sortedSubmissions, sortKey: sKey, sortDir: sDir, toggleSort: toggleS } = useSortable(submissions as unknown as Record<string, unknown>[], "submitted_at", "desc");
 
   if (loading) return <div className="p-8 text-sm text-zinc-500">Kraunama…</div>;
   if (error) return <div className="p-8 text-sm text-red-400">{error}</div>;
@@ -103,16 +109,16 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">El. paštas</th>
+                <SortableHeader label="El. paštas" colKey="email" sortKey={uKey as string} sortDir={uDir} onSort={(k) => toggleU(k as keyof Record<string, unknown>)} />
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Rolės</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Šablonai</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Pask. prisij.</th>
+                <SortableHeader label="Šablonai" colKey="template_count" sortKey={uKey as string} sortDir={uDir} onSort={(k) => toggleU(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Pask. prisij." colKey="last_login" sortKey={uKey as string} sortDir={uDir} onSort={(k) => toggleU(k as keyof Record<string, unknown>)} />
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Būsena</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Veiksmai</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {users.map((u) => (
+              {(sortedUsers as unknown as AdminUser[]).map((u) => (
                 <UserRow
                   key={u.id}
                   user={u}
@@ -143,13 +149,13 @@ export default function AdminPage() {
             <thead>
               <tr className="border-b border-zinc-800">
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Pavadinimas</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Savininkas</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Būsena</th>
+                <SortableHeader label="Pavadinimas" colKey="name" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Savininkas" colKey="owner_email" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Būsena" colKey="status" sortKey={tKey as string} sortDir={tDir} onSort={(k) => toggleT(k as keyof Record<string, unknown>)} />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {templates.map((t) => (
+              {(sortedTemplates as unknown as AdminTemplate[]).map((t) => (
                 <tr key={t.id} className="hover:bg-zinc-800/50 transition-colors">
                   <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{t.id}</td>
                   <td className="px-4 py-3 text-white">{t.name}</td>
@@ -173,15 +179,15 @@ export default function AdminPage() {
             <thead>
               <tr className="border-b border-zinc-800">
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Šablonas</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Pateikė</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Savininkas</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Data</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Būsena</th>
+                <SortableHeader label="Šablonas" colKey="template_name" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Pateikė" colKey="submitter_email" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Savininkas" colKey="owner_email" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Data" colKey="submitted_at" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
+                <SortableHeader label="Būsena" colKey="status" sortKey={sKey as string} sortDir={sDir} onSort={(k) => toggleS(k as keyof Record<string, unknown>)} />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {submissions.map((s) => (
+              {(sortedSubmissions as unknown as AdminSubmission[]).map((s) => (
                 <tr key={s.id} className="hover:bg-zinc-800/50 transition-colors">
                   <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{s.id}</td>
                   <td className="px-4 py-3 text-white text-xs">{s.template_name ?? "—"}</td>

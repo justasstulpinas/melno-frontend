@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, Template } from "@/lib/api";
+import { useSortable } from "@/hooks/useSortable";
+import { SortBar } from "@/components/SortableHeader";
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -55,6 +57,11 @@ export default function TemplatesPage() {
     }
   }
 
+  const { sorted: sortedTemplates, sortKey: tSortKey, sortDir: tSortDir, toggleSort: toggleTSort } = useSortable(
+    templates as unknown as Record<string, unknown>[],
+    "name"
+  );
+
   return (
     <div className="p-8 max-w-5xl">
       <div className="flex items-center justify-between mb-8">
@@ -86,8 +93,20 @@ export default function TemplatesPage() {
       )}
 
       {!loading && templates.length > 0 && (
+        <>
+        <div className="mb-4">
+          <SortBar
+            options={[
+              { key: "name", label: "Pavadinimas" },
+              { key: "status", label: "Būsena" },
+            ]}
+            sortKey={tSortKey as string}
+            sortDir={tSortDir}
+            onSort={(k) => toggleTSort(k as keyof Record<string, unknown>)}
+          />
+        </div>
         <div className="flex flex-col gap-2">
-          {templates.map((t) => (
+          {(sortedTemplates as unknown as Template[]).map((t) => (
             <TemplateCard
               key={t.id}
               template={t}
@@ -98,6 +117,7 @@ export default function TemplatesPage() {
             />
           ))}
         </div>
+        </>
       )}
     </div>
   );

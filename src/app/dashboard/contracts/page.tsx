@@ -4,6 +4,8 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api, SubmissionListItem, Submission } from "@/lib/api";
+import { useSortable } from "@/hooks/useSortable";
+import { SortBar } from "@/components/SortableHeader";
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Pateikta",
@@ -324,7 +326,13 @@ function ContractsPageInner() {
     );
   }
 
-  const filtered = submissions.filter((s) => {
+  const { sorted: sortedSubmissions, sortKey: subSortKey, sortDir: subSortDir, toggleSort: toggleSubSort } = useSortable(
+    submissions as unknown as Record<string, unknown>[],
+    "submitted_at",
+    "desc"
+  );
+
+  const filtered = (sortedSubmissions as unknown as SubmissionListItem[]).filter((s) => {
     if (filter !== "all" && s.status !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -384,6 +392,20 @@ function ContractsPageInner() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Ieškoti pagal šabloną, el. paštą ar duomenis…"
             className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700"
+          />
+        </div>
+
+        <div className="mb-4">
+          <SortBar
+            options={[
+              { key: "submitted_at", label: "Data" },
+              { key: "template_name", label: "Šablonas" },
+              { key: "status", label: "Būsena" },
+              { key: "submitter_email", label: "El. paštas" },
+            ]}
+            sortKey={subSortKey as string}
+            sortDir={subSortDir}
+            onSort={(k) => toggleSubSort(k as keyof Record<string, unknown>)}
           />
         </div>
 

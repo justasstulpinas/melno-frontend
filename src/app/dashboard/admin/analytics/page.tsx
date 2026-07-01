@@ -57,7 +57,7 @@ function AdminChart({
                 color: "#fff",
               }}
               labelStyle={{ color: "#a1a1aa" }}
-              formatter={(value: number) => [value, "Kiekis"]}
+              formatter={(value) => [value, "Kiekis"]}
             />
             <Line
               type="monotone"
