@@ -275,7 +275,7 @@ export default function ShareLinkPage() {
           </div>
           <div className="text-xs text-zinc-500">
             Galioja iki:{" "}
-            {new Date(generatedLink.expires_at).toLocaleString("lt-LT", {
+            {new Date(generatedLink.expires_at.endsWith("Z") ? generatedLink.expires_at : generatedLink.expires_at + "Z").toLocaleString("lt-LT", {
               day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
             })}
           </div>

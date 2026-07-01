@@ -25,7 +25,7 @@ const STATUS_STYLE: Record<string, string> = {
 type Filter = "all" | "submitted" | "confirmed" | "completed";
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
+  const d = new Date(iso.endsWith("Z") ? iso : iso + "Z");
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
