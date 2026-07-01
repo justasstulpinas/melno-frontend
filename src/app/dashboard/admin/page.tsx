@@ -1,0 +1,203 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api, AdminStats, AdminUser, AdminTemplate, AdminSubmission } from "@/lib/api";
+
+function fmtDate(iso: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const STATUS_STYLE: Record<string, string> = {
+  submitted: "bg-blue-950 text-blue-400",
+  confirmed: "bg-emerald-950 text-emerald-400",
+  completed: "bg-zinc-800 text-zinc-300",
+  cancelled: "bg-red-950 text-red-400",
+  draft: "bg-zinc-800 text-zinc-400",
+  active: "bg-emerald-950 text-emerald-400",
+  archived: "bg-zinc-800 text-zinc-500",
+};
+
+export default function AdminPage() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [templates, setTemplates] = useState<AdminTemplate[]>([]);
+  const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
+  const [tab, setTab] = useState<"users" | "templates" | "submissions">("users");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    Promise.all([
+      api.adminStats(),
+      api.adminUsers(),
+      api.adminTemplates(),
+      api.adminSubmissions(),
+    ])
+      .then(([s, u, t, sub]) => {
+        setStats(s);
+        setUsers(u);
+        setTemplates(t);
+        setSubmissions(sub);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="p-8 text-sm text-zinc-500">Kraunama…</div>;
+  if (error) return <div className="p-8 text-sm text-red-400">{error}</div>;
+
+  const tabClass = (t: string) =>
+    `px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+      tab === t ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
+    }`;
+
+  return (
+    <div className="p-8 max-w-6xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-white mb-1">Admin</h1>
+        <p className="text-sm text-zinc-400">Visos sistemos apžvalga.</p>
+      </div>
+
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <StatCard label="Vartotojai" value={stats.total_users} color="blue" />
+          <StatCard label="Šablonai" value={stats.total_templates} color="purple" />
+          <StatCard label="Sutartys" value={stats.total_submissions} color="zinc" />
+          <StatCard label="Patvirtintos" value={stats.confirmed_submissions} color="emerald" />
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6">
+        <button className={tabClass("users")} onClick={() => setTab("users")}>
+          Vartotojai ({users.length})
+        </button>
+        <button className={tabClass("templates")} onClick={() => setTab("templates")}>
+          Šablonai ({templates.length})
+        </button>
+        <button className={tabClass("submissions")} onClick={() => setTab("submissions")}>
+          Sutartys ({submissions.length})
+        </button>
+      </div>
+
+      {/* Users table */}
+      {tab === "users" && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">El. paštas</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Rolės</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Patvirtintas</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{u.id}</td>
+                  <td className="px-4 py-3 text-white">{u.email}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1 flex-wrap">
+                      {u.roles.map((r) => (
+                        <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">{r}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.is_verified
+                      ? <span className="text-xs text-emerald-400">✓ Taip</span>
+                      : <span className="text-xs text-zinc-500">Ne</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Templates table */}
+      {tab === "templates" && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Pavadinimas</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Savininkas</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Būsena</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {templates.map((t) => (
+                <tr key={t.id} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{t.id}</td>
+                  <td className="px-4 py-3 text-white">{t.name}</td>
+                  <td className="px-4 py-3 text-zinc-400 text-xs">{t.owner_email ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[t.status] ?? "bg-zinc-800 text-zinc-400"}`}>
+                      {t.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Submissions table */}
+      {tab === "submissions" && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">ID</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Šablonas</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Pateikė</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Savininkas</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Data</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Būsena</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {submissions.map((s) => (
+                <tr key={s.id} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="px-4 py-3 text-xs text-zinc-600 font-mono">#{s.id}</td>
+                  <td className="px-4 py-3 text-white text-xs">{s.template_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-zinc-400 text-xs">{s.submitter_email ?? "—"}</td>
+                  <td className="px-4 py-3 text-zinc-400 text-xs">{s.owner_email ?? "—"}</td>
+                  <td className="px-4 py-3 text-zinc-500 text-xs">{fmtDate(s.submitted_at)}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[s.status] ?? "bg-zinc-800 text-zinc-400"}`}>
+                      {s.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, color }: { label: string; value: number; color: "blue" | "emerald" | "purple" | "zinc" }) {
+  const bar: Record<string, string> = {
+    blue: "bg-blue-500",
+    emerald: "bg-emerald-500",
+    purple: "bg-purple-500",
+    zinc: "bg-zinc-600",
+  };
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+      <div className={`w-8 h-0.5 rounded-full mb-3 ${bar[color]}`} />
+      <p className="text-3xl font-semibold text-white mb-1 tabular-nums">{value}</p>
+      <p className="text-xs text-zinc-500">{label}</p>
+    </div>
+  );
+}

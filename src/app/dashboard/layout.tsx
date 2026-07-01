@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearToken, api } from "@/lib/api";
 import SessionWarning from "@/components/SessionWarning";
@@ -57,6 +58,13 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    api.me().then((user) => {
+      setIsAdmin(user.roles.includes("admin"));
+    }).catch(() => {});
+  }, []);
 
   async function handleLogout() {
     try { await api.logout(); } catch { /* ignore */ }
@@ -90,6 +98,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              href="/dashboard/admin"
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
+                pathname.startsWith("/dashboard/admin") ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="p-3 border-t border-zinc-800">

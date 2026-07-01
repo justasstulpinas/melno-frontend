@@ -47,7 +47,7 @@ export const api = {
     });
   },
   me() {
-    return request<{ id: number; email: string }>("/auth/me");
+    return request<{ id: number; email: string; roles: string[] }>("/auth/me");
   },
   logout() {
     return request<{ status: string }>("/auth/logout", { method: "POST" });
@@ -145,6 +145,20 @@ export const api = {
     return request<void>(`/contacts/${id}`, { method: "DELETE" });
   },
 
+  // Admin
+  adminStats() {
+    return request<AdminStats>("/admin/stats");
+  },
+  adminUsers() {
+    return request<AdminUser[]>("/admin/users");
+  },
+  adminTemplates() {
+    return request<AdminTemplate[]>("/admin/templates");
+  },
+  adminSubmissions() {
+    return request<AdminSubmission[]>("/admin/submissions");
+  },
+
   // Profile
   getProfile() {
     return request<Profile>("/profile");
@@ -205,6 +219,39 @@ export type Contact = {
   email: string | null;
   phone: string | null;
   address: string | null;
+};
+
+export type AdminStats = {
+  total_users: number;
+  total_templates: number;
+  total_submissions: number;
+  confirmed_submissions: number;
+};
+
+export type AdminUser = {
+  id: number;
+  email: string;
+  is_verified: boolean;
+  roles: string[];
+};
+
+export type AdminTemplate = {
+  id: number;
+  name: string;
+  status: string;
+  owner_email: string | null;
+  owner_id: number;
+};
+
+export type AdminSubmission = {
+  id: number;
+  status: string;
+  submitter_email: string | null;
+  submitted_at: string;
+  confirmed_at: string | null;
+  template_id: number;
+  template_name: string | null;
+  owner_email: string | null;
 };
 
 export type Profile = {
