@@ -68,6 +68,7 @@ export default function ShareLinkPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
 
   useEffect(() => {
     Promise.all([api.getTemplate(id), api.getProfile()])
@@ -277,6 +278,45 @@ export default function ShareLinkPage() {
               day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
             })}
           </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-1">
+            <div className="flex-1 h-px bg-zinc-800" />
+            <span className="text-xs text-zinc-600">arba</span>
+            <div className="flex-1 h-px bg-zinc-800" />
+          </div>
+
+          {/* Send via email */}
+          <div>
+            <p className="text-xs text-zinc-400 mb-2">Siųsti tiesiogiai el. paštu</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="kliento@pastas.lt"
+                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+              />
+              <a
+                href={recipientEmail ? (() => {
+                  const subject = encodeURIComponent(`Sutartis pasirašymui: ${template?.name}`);
+                  const body = encodeURIComponent(
+                    `Sveiki,\n\nSiunčiu jums sutartį pasirašymui.\n\nPaspauskite žemiau esančią nuorodą, peržiūrėkite sutartį ir užpildykite reikiamus laukus:\n\n${publicUrl}\n\nNuoroda galios iki: ${new Date(generatedLink.expires_at).toLocaleString("lt-LT", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}\n\nJei turite klausimų, susisiekite su mumis.\n\nPagarbiai`
+                  );
+                  return `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
+                })() : "#"}
+                onClick={(e) => { if (!recipientEmail) e.preventDefault(); }}
+                className={`shrink-0 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
+                  recipientEmail
+                    ? "bg-white text-zinc-950 hover:bg-zinc-200"
+                    : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                }`}
+              >
+                Siųsti →
+              </a>
+            </div>
+          </div>
+
           <button
             onClick={() => handleRevoke(generatedLink.id)}
             className="text-xs text-red-400 hover:text-red-300 transition-colors w-fit"

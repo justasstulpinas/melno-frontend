@@ -56,6 +56,7 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<PublicLink | null>(null);
   const [copied, setCopied] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
 
   useEffect(() => {
     Promise.all([api.getTemplates(), api.getProfile()])
@@ -262,6 +263,41 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
                   })}
                 </p>
               )}
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-1">
+                <div className="flex-1 h-px bg-zinc-800" />
+                <span className="text-xs text-zinc-600">arba</span>
+                <div className="flex-1 h-px bg-zinc-800" />
+              </div>
+
+              <p className="text-xs text-zinc-400">Siųsti tiesiogiai el. paštu</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="email"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  placeholder="kliento@pastas.lt"
+                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                />
+                <a
+                  href={recipientEmail && generatedLink ? (() => {
+                    const subject = encodeURIComponent(`Sutartis pasirašymui: ${selected?.name}`);
+                    const body = encodeURIComponent(
+                      `Sveiki,\n\nSiunčiu jums sutartį pasirašymui.\n\nPaspauskite žemiau esančią nuorodą, peržiūrėkite sutartį ir užpildykite reikiamus laukus:\n\n${publicUrl}\n\nNuoroda galios iki: ${new Date(generatedLink.expires_at).toLocaleString("lt-LT", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}\n\nJei turite klausimų, susisiekite su mumis.\n\nPagarbiai`
+                    );
+                    return `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
+                  })() : "#"}
+                  onClick={(e) => { if (!recipientEmail) e.preventDefault(); }}
+                  className={`shrink-0 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
+                    recipientEmail
+                      ? "bg-white text-zinc-950 hover:bg-zinc-200"
+                      : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                  }`}
+                >
+                  Siųsti →
+                </a>
+              </div>
             </div>
           )}
         </div>
