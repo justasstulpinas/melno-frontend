@@ -24,6 +24,29 @@ export default function ContactsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  function exportVCard(c: Contact) {
+    const lines = ["BEGIN:VCARD", "VERSION:3.0"];
+    if (c.name) {
+      lines.push(`FN:${c.name}`);
+      const parts = c.name.trim().split(" ");
+      const last = parts.length > 1 ? parts.pop()! : "";
+      const first = parts.join(" ");
+      lines.push(`N:${last};${first};;;`);
+    }
+    if (c.email) lines.push(`EMAIL:${c.email}`);
+    if (c.phone) lines.push(`TEL:${c.phone}`);
+    if (c.address) lines.push(`ADR:;;${c.address};;;;`);
+    lines.push("END:VCARD");
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${c.name ?? c.email ?? "kontaktas"}.vcf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleDelete(id: number) {
     if (!confirm("Ištrinti šį kontaktą?")) return;
     try {
@@ -128,9 +151,20 @@ export default function ContactsPage() {
                     {c.address && <p className="text-xs text-zinc-500">{c.address}</p>}
                   </div>
                 </div>
-                <button onClick={() => handleDelete(c.id)} className="text-xs text-zinc-600 hover:text-red-400 transition-colors shrink-0">
-                  Ištrinti
-                </button>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => exportVCard(c)}
+                    title="Eksportuoti į adresų knygą"
+                    className="text-zinc-600 hover:text-zinc-300 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </button>
+                  <button onClick={() => handleDelete(c.id)} className="text-xs text-zinc-600 hover:text-red-400 transition-colors">
+                    Ištrinti
+                  </button>
+                </div>
               </div>
             ))}
           </div>
