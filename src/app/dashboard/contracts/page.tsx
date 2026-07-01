@@ -22,7 +22,7 @@ const STATUS_STYLE: Record<string, string> = {
   cancelled: "bg-red-950 text-red-400",
 };
 
-type Filter = "all" | "submitted" | "confirmed" | "completed" | "cancelled";
+type Filter = "all" | "submitted" | "confirmed" | "completed";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -402,7 +402,6 @@ function ContractsPageInner() {
     submitted: submissions.filter((s) => s.status === "submitted").length,
     confirmed: submissions.filter((s) => s.status === "confirmed").length,
     completed: submissions.filter((s) => s.status === "completed").length,
-    cancelled: submissions.filter((s) => s.status === "cancelled").length,
   };
 
   return (
@@ -434,7 +433,7 @@ function ContractsPageInner() {
 
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1 flex-wrap">
-            {(["all", "submitted", "confirmed", "completed", "cancelled"] as Filter[]).map((f) => (
+            {(["all", "submitted", "confirmed", "completed"] as Filter[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
