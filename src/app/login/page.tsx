@@ -24,9 +24,7 @@ function LoginForm() {
     setLoading(true);
     try {
       const data = await api.login(email, password);
-      saveToken(data.access_token);
-      if (remember) localStorage.setItem("remember", "1");
-      else localStorage.removeItem("remember");
+      saveToken(data.access_token, remember);
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Prisijungti nepavyko");
