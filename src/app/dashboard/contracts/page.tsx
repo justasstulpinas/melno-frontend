@@ -434,9 +434,17 @@ function ContractsPageInner() {
       )}
 
       <div className="p-8 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-white mb-1">Sutartys</h1>
-          <p className="text-sm text-zinc-400">Visos pateiktos sutartys ir jų būsenos.</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold text-white mb-1">Sutartys</h1>
+            <p className="text-sm text-zinc-400">Visos pateiktos sutartys ir jų būsenos.</p>
+          </div>
+          <Link
+            href="/dashboard/templates/new"
+            className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
+          >
+            + Nauja sutartis
+          </Link>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-6">

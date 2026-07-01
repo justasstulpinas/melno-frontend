@@ -260,12 +260,12 @@ export default function SignPage() {
                 />
               </div>
             </div>
-            <div className="mt-6 flex items-center justify-between">
+            <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handleDecline}
                 disabled={declining}
-                className="text-sm text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                className="text-sm text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-50 px-4 py-2.5"
               >
                 {declining ? "Atmetama…" : "Atmesti sutartį"}
               </button>
