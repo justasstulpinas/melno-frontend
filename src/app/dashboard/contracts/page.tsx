@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { api, SubmissionListItem, Submission } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
+import { NewContractModal } from "@/components/NewContractModal";
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Pateikta",
@@ -368,6 +369,7 @@ function ContractsPageInner() {
   const [filter, setFilter] = useState<Filter>((searchParams.get("filter") as Filter) ?? "all");
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<SubmissionListItem | null>(null);
+  const [showNewContract, setShowNewContract] = useState(false);
 
   useEffect(() => {
     api.getAllSubmissions()
@@ -433,18 +435,19 @@ function ContractsPageInner() {
         />
       )}
 
+      {showNewContract && <NewContractModal onClose={() => setShowNewContract(false)} />}
       <div className="p-8 max-w-6xl">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-semibold text-white mb-1">Sutartys</h1>
             <p className="text-sm text-zinc-400">Visos pateiktos sutartys ir jų būsenos.</p>
           </div>
-          <Link
-            href="/dashboard/templates/new"
+          <button
+            onClick={() => setShowNewContract(true)}
             className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
           >
             + Nauja sutartis
-          </Link>
+          </button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
