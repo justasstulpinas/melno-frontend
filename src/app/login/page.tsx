@@ -25,7 +25,8 @@ function LoginForm() {
     try {
       const data = await api.login(email, password);
       saveToken(data.access_token, remember);
-      router.push("/dashboard");
+      const redirect = searchParams.get("redirect");
+      router.push(redirect ?? "/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Prisijungti nepavyko");
     } finally {

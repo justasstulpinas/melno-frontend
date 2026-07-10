@@ -67,7 +67,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return;
       }
       setIsAdmin(user.roles.includes("admin"));
-    }).catch(() => {});
+    }).catch(() => {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    });
   }, []);
 
   async function handleLogout() {
