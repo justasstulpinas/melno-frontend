@@ -216,6 +216,7 @@ export type SubmissionListItem = {
 export type Submission = {
   id: number;
   template_id: number;
+  template_name: string;
   template_version: number;
   link_id: number;
   submitted_data: Record<string, string>;
