@@ -312,8 +312,12 @@ export default function SubmissionDetailPage() {
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            <DownloadBtn submissionId={submission.id} format="pdf" label="Atsisiųsti PDF" />
-            <DownloadBtn submissionId={submission.id} format="docx" label="Atsisiųsti DOCX" />
+            {(submission.status === "confirmed" || submission.status === "completed") && (
+              <>
+                <DownloadBtn submissionId={submission.id} format="pdf" label="Atsisiųsti PDF" />
+                <DownloadBtn submissionId={submission.id} format="docx" label="Atsisiųsti DOCX" />
+              </>
+            )}
             <button
               onClick={handleSaveContact}
               disabled={savingContact || contactSaved}

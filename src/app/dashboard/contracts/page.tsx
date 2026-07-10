@@ -269,8 +269,12 @@ function ContractModal({
 
               {/* Downloads */}
               <div className="flex gap-2">
-                <DownloadBtn submissionId={item.id} format="pdf" label="Atsisiųsti PDF" />
-                <DownloadBtn submissionId={item.id} format="docx" label="Atsisiųsti DOCX" />
+                {(item.status === "confirmed" || item.status === "completed") && (
+                  <>
+                    <DownloadBtn submissionId={item.id} format="pdf" label="Atsisiųsti PDF" />
+                    <DownloadBtn submissionId={item.id} format="docx" label="Atsisiųsti DOCX" />
+                  </>
+                )}
                 <button
                   onClick={handleSaveContact}
                   disabled={savingContact || contactSaved}
@@ -347,14 +351,82 @@ function DownloadBtn({ submissionId, format, label }: { submissionId: number; fo
   );
 }
 
+// ---- Preview Modal --------------------------------------------------------
+
+function PreviewModal({ submissionId, onClose }: { submissionId: number; onClose: () => void }) {
+  const [html, setHtml] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getSubmissionHtml(submissionId)
+      .then(({ html }) => setHtml(html))
+      .finally(() => setLoading(false));
+  }, [submissionId]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 shrink-0">
+          <h2 className="text-sm font-semibold text-white">Sutarties peržiūra</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors p-1">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto p-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-40">
+              <p className="text-sm text-zinc-500">Kraunama…</p>
+            </div>
+          ) : (
+            <div className="bg-[#c8c8c8] rounded-xl py-8 px-6">
+              <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.3)]" style={{ maxWidth: 794 }}>
+                {html ? (
+                  <iframe
+                    srcDoc={html}
+                    className="w-full border-0 rounded"
+                    style={{ minHeight: 900 }}
+                    onLoad={(e) => {
+                      const iframe = e.currentTarget;
+                      const body = iframe.contentDocument?.body;
+                      if (body) iframe.style.height = body.scrollHeight + 40 + "px";
+                    }}
+                  />
+                ) : (
+                  <p className="p-8 text-sm text-zinc-500">Nepavyko užkrauti peržiūros.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---- Row ------------------------------------------------------------------
 
 function ContractRow({
   submission: s,
   onOpen,
+  onPreview,
 }: {
   submission: SubmissionListItem;
   onOpen: (s: SubmissionListItem) => void;
+  onPreview: (id: number) => void;
 }) {
   return (
     <div
@@ -376,6 +448,13 @@ function ContractRow({
         {STATUS_LABEL[s.status] ?? s.status}
       </span>
 
+      <button
+        onClick={(e) => { e.stopPropagation(); onPreview(s.id); }}
+        className="text-xs text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-600 px-2.5 py-1 rounded-md transition-colors shrink-0"
+      >
+        Peržiūrėti
+      </button>
+
       <svg className="w-4 h-4 text-zinc-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
@@ -393,6 +472,7 @@ function ContractsPageInner() {
   const [filter, setFilter] = useState<Filter>((searchParams.get("filter") as Filter) ?? "all");
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<SubmissionListItem | null>(null);
+  const [previewId, setPreviewId] = useState<number | null>(null);
   const [showNewContract, setShowNewContract] = useState(false);
 
   useEffect(() => {
@@ -456,6 +536,10 @@ function ContractsPageInner() {
           onCancel={handleCancel}
           onComplete={handleComplete}
         />
+      )}
+
+      {previewId !== null && (
+        <PreviewModal submissionId={previewId} onClose={() => setPreviewId(null)} />
       )}
 
       {showNewContract && <NewContractModal onClose={() => setShowNewContract(false)} />}
@@ -525,7 +609,7 @@ function ContractsPageInner() {
         {!loading && filtered.length > 0 && (
           <div className="flex flex-col gap-2">
             {filtered.map((s) => (
-              <ContractRow key={s.id} submission={s} onOpen={setModal} />
+              <ContractRow key={s.id} submission={s} onOpen={setModal} onPreview={setPreviewId} />
             ))}
           </div>
         )}
