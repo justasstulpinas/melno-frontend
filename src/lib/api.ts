@@ -2,22 +2,15 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("token") ?? sessionStorage.getItem("token");
+  return localStorage.getItem("token");
 }
 
-export function saveToken(token: string, remember: boolean) {
-  if (remember) {
-    localStorage.setItem("token", token);
-    sessionStorage.removeItem("token");
-  } else {
-    sessionStorage.setItem("token", token);
-    localStorage.removeItem("token");
-  }
+export function saveToken(token: string, _remember: boolean) {
+  localStorage.setItem("token", token);
 }
 
 export function clearToken() {
   localStorage.removeItem("token");
-  sessionStorage.removeItem("token");
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
