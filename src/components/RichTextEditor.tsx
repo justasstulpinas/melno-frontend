@@ -105,8 +105,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(
       content: value || `<p></p>`,
       editorProps: {
         attributes: {
-          class: "tiptap-page min-h-[1123px] w-full text-zinc-900 focus:outline-none",
-          style: "padding: 91px 61px 76px 61px; font-family: 'Times New Roman', Times, serif; font-size: 16px; line-height: 1.6;",
+          class: "tiptap-page w-full text-zinc-900 focus:outline-none",
+          style: [
+            "padding: 91px 61px 76px 61px",
+            "font-family: 'Times New Roman', Times, serif",
+            "font-size: 16px",
+            "line-height: 1.6",
+            "min-height: 1123px",
+            // Draw a page-break line every 1123px and a gap to simulate separate sheets
+            "background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 1121px, #c8c8c8 1121px, #c8c8c8 1123px, #e5e7eb 1123px, #e5e7eb 1139px, white 1139px)",
+            "background-size: 100% 1139px",
+          ].join("; "),
           "data-placeholder": placeholder ?? "",
         },
       },
