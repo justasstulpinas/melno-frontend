@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, Template } from "@/lib/api";
@@ -12,6 +12,25 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleDocxUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { html } = await api.uploadDocx(file);
+      sessionStorage.setItem("docx_import_html", html);
+      sessionStorage.setItem("docx_import_name", file.name.replace(/\.docx$/i, ""));
+      router.push("/dashboard/templates/new");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Įkėlimas nepavyko");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   useEffect(() => {
     api.getTemplates()
@@ -64,17 +83,34 @@ export default function TemplatesPage() {
 
   return (
     <div className="p-8 max-w-5xl">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".docx"
+        className="hidden"
+        onChange={handleDocxUpload}
+      />
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-white mb-1">Šablonai</h1>
           <p className="text-sm text-zinc-400">Tvarkykite savo sutarčių šablonus.</p>
         </div>
-        <Link
-          href="/dashboard/templates/new"
-          className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
-        >
-          + Naujas šablonas
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="text-sm text-zinc-300 border border-zinc-700 px-4 py-2 rounded-md font-medium hover:border-zinc-500 hover:text-white transition-colors disabled:opacity-50"
+          >
+            {uploading ? "Konvertuojama…" : "Įkelti .docx"}
+          </button>
+          <Link
+            href="/dashboard/templates/new"
+            className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
+          >
+            + Naujas šablonas
+          </Link>
+        </div>
       </div>
 
       {loading && <p className="text-sm text-zinc-500">Kraunama…</p>}

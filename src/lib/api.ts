@@ -81,7 +81,7 @@ export const api = {
   createTemplate(data: { name: string; description?: string; content: string }) {
     return request<Template>("/templates", { method: "POST", body: JSON.stringify(data) });
   },
-  updateTemplate(id: number, data: Partial<{ name: string; description: string; content: string }>) {
+  updateTemplate(id: number, data: Partial<{ name: string; description: string; content: string; logo_x: number; logo_y: number; logo_w: number; client_sig_x: number | null; client_sig_y: number | null; user_sig_x: number | null; user_sig_y: number | null }>) {
     return request<Template>(`/templates/${id}`, { method: "PUT", body: JSON.stringify(data) });
   },
   duplicateTemplate(id: number) {
@@ -98,6 +98,22 @@ export const api = {
   },
   getSubmissions(templateId: number) {
     return request<Submission[]>(`/templates/${templateId}/submissions`);
+  },
+  async uploadDocx(file: File): Promise<{ html: string }> {
+    const token = getToken();
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${BASE_URL}/templates/upload-docx`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ detail: "Įkėlimas nepavyko" }));
+      throw new Error(body.detail ?? "Įkėlimas nepavyko");
+    }
+    return res.json();
   },
 
   // Links
@@ -184,6 +200,18 @@ export const api = {
   updateProfile(data: Partial<{ profile_name: string; company_name: string; company_code: string; address: string; phone_number: string }>) {
     return request<Profile>("/profile", { method: "PUT", body: JSON.stringify(data) });
   },
+  saveUserSignature(signature_image: string) {
+    return request<Profile>("/profile/signature", { method: "POST", body: JSON.stringify({ signature_image }) });
+  },
+  deleteUserSignature() {
+    return request<Profile>("/profile/signature", { method: "DELETE" });
+  },
+  saveUserLogo(logo_image: string) {
+    return request<Profile>("/profile/logo", { method: "POST", body: JSON.stringify({ logo_image }) });
+  },
+  deleteUserLogo() {
+    return request<Profile>("/profile/logo", { method: "DELETE" });
+  },
 };
 
 // Types
@@ -193,6 +221,13 @@ export type Template = {
   description: string | null;
   content: string;
   status: "draft" | "active" | "archived";
+  logo_x: number;
+  logo_y: number;
+  logo_w: number;
+  client_sig_x: number | null;
+  client_sig_y: number | null;
+  user_sig_x: number | null;
+  user_sig_y: number | null;
 };
 
 export type SubmissionListItem = {
@@ -229,6 +264,8 @@ export type PublicLink = {
   token: string;
   expires_at: string;
   is_revoked: boolean;
+  logo_x: number;
+  logo_y: number;
   created_at: string;
 };
 
@@ -291,6 +328,10 @@ export type Profile = {
   address: string | null;
   phone_number: string | null;
   avatar_url: string | null;
+  signature_image: string | null;
+  logo_image: string | null;
+  logo_x: number;
+  logo_y: number;
   created_at: string;
   updated_at: string;
 };

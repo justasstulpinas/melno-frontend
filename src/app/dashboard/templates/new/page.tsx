@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -54,6 +54,17 @@ export default function NewTemplatePage() {
   const [loading, setLoading] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+
+  useEffect(() => {
+    const importedHtml = sessionStorage.getItem("docx_import_html");
+    const importedName = sessionStorage.getItem("docx_import_name");
+    if (importedHtml) {
+      setContent(importedHtml);
+      if (importedName) setName(importedName);
+      sessionStorage.removeItem("docx_import_html");
+      sessionStorage.removeItem("docx_import_name");
+    }
+  }, []);
 
   function handleContentChange(html: string) {
     setContent(html);
