@@ -54,6 +54,7 @@ export default function NewTemplatePage() {
   const [loading, setLoading] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [editorReady, setEditorReady] = useState(false);
 
   useEffect(() => {
     const importedHtml = sessionStorage.getItem("docx_import_html");
@@ -64,6 +65,7 @@ export default function NewTemplatePage() {
       sessionStorage.removeItem("docx_import_html");
       sessionStorage.removeItem("docx_import_name");
     }
+    setEditorReady(true);
   }, []);
 
   function handleContentChange(html: string) {
@@ -156,12 +158,14 @@ export default function NewTemplatePage() {
           <div className="max-w-[1400px] mx-auto px-8 py-10">
             <div className="flex gap-8 items-start">
               <div className="flex-1 min-w-0">
-                <RichTextEditor
-                  ref={editorRef}
-                  value={content}
-                  onChange={handleContentChange}
-                  placeholder="Pradėkite rašyti sutartį…"
-                />
+                {editorReady && (
+                  <RichTextEditor
+                    ref={editorRef}
+                    value={content}
+                    onChange={handleContentChange}
+                    placeholder="Pradėkite rašyti sutartį…"
+                  />
+                )}
               </div>
               <PlaceholderSidebar editorRef={editorRef} />
             </div>
