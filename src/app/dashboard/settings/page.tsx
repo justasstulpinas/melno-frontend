@@ -395,7 +395,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-white mb-0.5">Įmonės informacija</p>
-                <p className="text-xs text-zinc-500">Vardas, įmonė, kodas, adresas, telefonas</p>
+                <p className="text-xs text-zinc-500">Pridėkite įmonės informaciją kuri automatiškai susipildys į jūsų šablonus</p>
               </div>
               <button type="button" onClick={openEditModal} className="text-sm text-zinc-400 border border-zinc-700 hover:border-zinc-500 hover:text-white px-3 py-1.5 rounded-md transition-colors shrink-0">
                 + Pridėti
