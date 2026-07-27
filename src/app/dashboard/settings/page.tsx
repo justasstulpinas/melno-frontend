@@ -320,7 +320,7 @@ export default function SettingsPage() {
           ) : (
             <button
               type="button"
-              onClick={() => setEditingInfo(true)}
+              onClick={openEditModal}
               className="text-sm text-zinc-500 hover:text-white transition-colors text-left"
             >
               + Pridėti vardą
