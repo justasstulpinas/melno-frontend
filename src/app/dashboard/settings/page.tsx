@@ -289,9 +289,10 @@ export default function SettingsPage() {
             onClick={() => avatarInputRef.current?.click()}
             disabled={savingAvatar}
             className="relative w-20 h-20 rounded-full overflow-hidden bg-zinc-800 border-2 border-zinc-700 hover:border-zinc-500 transition-colors group disabled:opacity-50 shrink-0"
+            style={{ borderRadius: "9999px" }}
           >
             {profile?.avatar_url ? (
-              <img src={`${BASE_URL}${profile.avatar_url}`} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={`${BASE_URL}${profile.avatar_url}`} alt="Avatar" className="absolute inset-0 w-full h-full object-cover block" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-zinc-600 group-hover:text-zinc-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
