@@ -212,6 +212,25 @@ export const api = {
   deleteUserLogo() {
     return request<Profile>("/profile/logo", { method: "DELETE" });
   },
+  async uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+    const token = getToken();
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${BASE_URL}/profile/avatar`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ detail: "Nepavyko įkelti" }));
+      throw new Error(body.detail ?? "Nepavyko įkelti");
+    }
+    return res.json();
+  },
+  deleteAvatar() {
+    return request<{ avatar_url: null }>("/profile/avatar", { method: "DELETE" });
+  },
 };
 
 // Types
