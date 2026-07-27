@@ -10,19 +10,32 @@ const syne = Syne({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (password !== confirm) {
+      setError("Slaptažodžiai nesutampa");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Slaptažodis turi būti bent 8 simbolių");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
       await api.register(email, password);
       const data = await api.login(email, password);
       saveToken(data.access_token, false);
+      if (name.trim()) {
+        await api.updateProfile({ profile_name: name.trim() });
+      }
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registracija nepavyko");
@@ -75,6 +88,16 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
+              <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>Vardas</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jūsų vardas"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-colors"
+              />
+            </div>
+            <div>
               <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>El. paštas</label>
               <input
                 type="email"
@@ -95,6 +118,24 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-colors"
               />
+            </div>
+            <div>
+              <label className={`${syne.className} block text-xs font-medium text-zinc-400 mb-1.5`}>Pakartokite slaptažodį</label>
+              <input
+                type="password"
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                className={`w-full bg-zinc-900 border rounded-md px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 transition-colors ${
+                  confirm && confirm !== password
+                    ? "border-red-800 focus:ring-red-800"
+                    : "border-zinc-800 focus:ring-zinc-600"
+                }`}
+              />
+              {confirm && confirm !== password && (
+                <p className={`${syne.className} text-xs text-red-400 mt-1`}>Slaptažodžiai nesutampa</p>
+              )}
             </div>
 
             {error && (
