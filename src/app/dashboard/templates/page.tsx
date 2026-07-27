@@ -96,21 +96,13 @@ export default function TemplatesPage() {
           <h1 className="text-2xl font-semibold text-white mb-1">Šablonai</h1>
           <p className="text-sm text-zinc-400">Tvarkykite savo sutarčių šablonus.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="text-sm text-zinc-300 border border-zinc-700 px-4 py-2 rounded-md font-medium hover:border-zinc-500 hover:text-white transition-colors disabled:opacity-50"
-          >
-            {uploading ? "Konvertuojama…" : "Įkelti .docx"}
-          </button>
-          <Link
-            href="/dashboard/templates/new"
-            className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
-          >
-            + Naujas šablonas
-          </Link>
-        </div>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
+        >
+          {uploading ? "Konvertuojama…" : "+ Įkelti .docx šabloną"}
+        </button>
       </div>
 
       {loading && <p className="text-sm text-zinc-500">Kraunama…</p>}
@@ -119,12 +111,13 @@ export default function TemplatesPage() {
       {!loading && templates.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 border border-dashed border-zinc-800 rounded-xl">
           <p className="text-sm text-zinc-500 mb-4">Šablonų dar nėra</p>
-          <Link
-            href="/dashboard/templates/new"
-            className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
           >
-            Sukurti pirmą šabloną
-          </Link>
+            {uploading ? "Konvertuojama…" : "Įkelti pirmą .docx šabloną"}
+          </button>
         </div>
       )}
 
