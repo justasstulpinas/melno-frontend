@@ -367,25 +367,41 @@ export default function SettingsPage() {
 
       {/* Profile info card */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white">Įmonės informacija</h2>
-          <button type="button" onClick={openEditModal} className="text-xs text-zinc-500 hover:text-white transition-colors">
-            Redaguoti
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: "Vardas", value: profile?.profile_name },
-            { label: "Įmonė", value: profile?.company_name },
-            { label: "Kodas", value: profile?.company_code },
-            { label: "Telefonas", value: profile?.phone_number },
-            { label: "Adresas", value: profile?.address },
-          ].map(f => (
-            <div key={f.label} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-0.5">{f.label}</p>
-              <p className="text-sm text-white">{f.value || <span className="text-zinc-600">—</span>}</p>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+          {hasInfo(profile) ? (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-white">Įmonės informacija</h2>
+                <button type="button" onClick={openEditModal} className="text-xs text-zinc-500 hover:text-white transition-colors">
+                  Redaguoti
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {[
+                  { label: "Vardas", value: profile?.profile_name },
+                  { label: "Įmonė", value: profile?.company_name },
+                  { label: "Kodas", value: profile?.company_code },
+                  { label: "Telefonas", value: profile?.phone_number },
+                  { label: "Adresas", value: profile?.address },
+                ].filter(f => f.value).map(f => (
+                  <div key={f.label} className="flex items-baseline gap-3">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-wide w-16 shrink-0">{f.label}</span>
+                    <span className="text-sm text-white">{f.value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white mb-0.5">Įmonės informacija</p>
+                <p className="text-xs text-zinc-500">Vardas, įmonė, kodas, adresas, telefonas</p>
+              </div>
+              <button type="button" onClick={openEditModal} className="text-sm text-zinc-400 border border-zinc-700 hover:border-zinc-500 hover:text-white px-3 py-1.5 rounded-md transition-colors shrink-0">
+                + Pridėti
+              </button>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
