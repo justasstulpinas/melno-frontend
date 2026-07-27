@@ -10,6 +10,10 @@ type PublicTemplate = {
   description: string | null;
   content: string;
   fields: string[];
+  logo_image: string | null;
+  logo_x: number;
+  logo_y: number;
+  logo_w: number;
 };
 
 function buildPreviewHtml(content: string, fields: Record<string, string>): string {
@@ -321,7 +325,28 @@ export default function SignPage() {
                   <mark style={{ background: "#fef9c3", color: "#713f12", padding: "0 3px", borderRadius: 3 }}>geltonai</mark>.
                 </p>
                 <div className="bg-[#c8c8c8] rounded-xl py-4 px-2 sm:py-10 sm:px-8 shadow-inner overflow-x-auto">
-                  <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)] w-full" style={{ maxWidth: 794, aspectRatio: "210 / 297" }}>
+                  <div
+                    className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)] w-full relative"
+                    style={{ maxWidth: 794 }}
+                  >
+                    {/* Logo */}
+                    {template!.logo_image && (
+                      <img
+                        src={`data:image/png;base64,${template!.logo_image}`}
+                        alt="Logo"
+                        style={{
+                          position: "absolute",
+                          left: `${template!.logo_x}%`,
+                          top: `${template!.logo_y}%`,
+                          width: `${template!.logo_w}%`,
+                          maxWidth: `${template!.logo_w}%`,
+                          height: "auto",
+                          objectFit: "contain",
+                          zIndex: 10,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    )}
                     <div
                       style={{
                         padding: "clamp(16px, 5vw, 91px) clamp(12px, 4vw, 61px) clamp(16px, 4vw, 76px)",
@@ -329,7 +354,6 @@ export default function SignPage() {
                         fontSize: "clamp(11px, 2vw, 16px)",
                         lineHeight: 1.6,
                         color: "#18181b",
-                        height: "100%",
                       }}
                       dangerouslySetInnerHTML={{ __html: buildPreviewHtml(template!.content, fields) }}
                     />

@@ -92,7 +92,6 @@ export default function ShareLinkPage() {
   async function handleGenerate() {
     setLoading(true);
     try {
-      // format date fields as readable strings before sending
       const formatted: Record<string, string> = {};
       for (const [k, v] of Object.entries(prefill)) {
         formatted[k] = isDateField(k) && v ? formatDate(v) : v;
@@ -152,7 +151,6 @@ export default function ShareLinkPage() {
 
       {!generatedLink ? (
         <div className="flex flex-col gap-5">
-          {/* Your info fields */}
           {nonDateFields.length > 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
               <div>
@@ -161,9 +159,7 @@ export default function ShareLinkPage() {
               </div>
               {nonDateFields.map((field) => (
                 <div key={field}>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                    {FRIENDLY[field] ?? field}
-                  </label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">{FRIENDLY[field] ?? field}</label>
                   <input
                     value={prefill[field] ?? ""}
                     onChange={(e) => setPrefill({ ...prefill, [field]: e.target.value })}
@@ -174,7 +170,6 @@ export default function ShareLinkPage() {
             </div>
           )}
 
-          {/* Date fields */}
           {dateFields.length > 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-5">
               <div>
@@ -183,44 +178,28 @@ export default function ShareLinkPage() {
               </div>
               {dateFields.map((field) => (
                 <div key={field}>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                    {FRIENDLY[field] ?? field.replace(/_/g, " ")}
-                  </label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">{FRIENDLY[field] ?? field.replace(/_/g, " ")}</label>
                   <input
                     type="date"
                     value={prefill[field] ?? ""}
                     onChange={(e) => setPrefill({ ...prefill, [field]: e.target.value })}
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600 [color-scheme:dark]"
                   />
-
-                  {/* Duration shortcuts — only show on end/due/deadline fields if there's a start date field */}
-                  {(field.includes("end") || field.includes("due") || field.includes("deadline")) &&
-                    ownerFields.includes("owner_start_date") && (
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="text-[11px] text-zinc-500">Nuo pradžios datos:</span>
-                        {[
-                          { label: "+1 savaitė", days: 7 },
-                          { label: "+2 savaitės", days: 14 },
-                          { label: "+1 mėnuo", days: 30 },
-                          { label: "+3 mėnesiai", days: 90 },
-                        ].map(({ label, days }) => (
-                          <button
-                            key={days}
-                            type="button"
-                            onClick={() => setDateWithDuration(field, "owner_start_date", days)}
-                            className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  {(field.includes("end") || field.includes("due") || field.includes("deadline")) && ownerFields.includes("owner_start_date") && (
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span className="text-[11px] text-zinc-500">Nuo pradžios datos:</span>
+                      {[{label:"+1 savaitė",days:7},{label:"+2 savaitės",days:14},{label:"+1 mėnuo",days:30},{label:"+3 mėnesiai",days:90}].map(({label,days}) => (
+                        <button key={days} type="button" onClick={() => setDateWithDuration(field,"owner_start_date",days)} className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors">
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Link settings */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
             <h2 className="text-sm font-semibold text-white">Nuorodos nustatymai</h2>
             <div>
@@ -237,11 +216,7 @@ export default function ShareLinkPage() {
                 <option value={720}>30 days</option>
               </select>
             </div>
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="bg-white text-zinc-950 px-5 py-2.5 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 w-fit"
-            >
+            <button onClick={handleGenerate} disabled={loading} className="bg-white text-zinc-950 px-5 py-2.5 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 w-fit">
               {loading ? "Generuojama…" : "Generuoti nuorodą"}
             </button>
           </div>
@@ -260,34 +235,23 @@ export default function ShareLinkPage() {
           <div>
             <p className="text-xs text-zinc-500 mb-2">Dalinkitės šia nuoroda su klientu</p>
             <div className="flex items-center gap-2">
-              <input
-                readOnly
-                value={publicUrl ?? ""}
-                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-300 font-mono focus:outline-none"
-              />
-              <button
-                onClick={() => handleCopy(publicUrl!)}
-                className="shrink-0 bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:text-white px-3 py-2 rounded-md transition-colors"
-              >
+              <input readOnly value={publicUrl ?? ""} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-300 font-mono focus:outline-none" />
+              <button onClick={() => handleCopy(publicUrl!)} className="shrink-0 bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:text-white px-3 py-2 rounded-md transition-colors">
                 {copied ? "Nukopijuota!" : "Kopijuoti"}
               </button>
             </div>
           </div>
           <div className="text-xs text-zinc-500">
             Galioja iki:{" "}
-            {new Date(generatedLink.expires_at.endsWith("Z") ? generatedLink.expires_at : generatedLink.expires_at + "Z").toLocaleString("lt-LT", {
-              day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-            })}
+            {new Date(generatedLink.expires_at.endsWith("Z") ? generatedLink.expires_at : generatedLink.expires_at + "Z").toLocaleString("lt-LT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
           </div>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 my-1">
             <div className="flex-1 h-px bg-zinc-800" />
             <span className="text-xs text-zinc-600">arba</span>
             <div className="flex-1 h-px bg-zinc-800" />
           </div>
 
-          {/* Send via email */}
           <div>
             <p className="text-xs text-zinc-400 mb-2">Siųsti tiesiogiai el. paštu</p>
             <div className="flex items-center gap-2">
@@ -295,27 +259,18 @@ export default function ShareLinkPage() {
               <a
                 href={recipientEmail ? (() => {
                   const subject = encodeURIComponent(`Sutartis pasirašymui: ${template?.name}`);
-                  const body = encodeURIComponent(
-                    `Sveiki,\n\nSiunčiu jums sutartį pasirašymui.\n\nPaspauskite žemiau esančią nuorodą, peržiūrėkite sutartį ir užpildykite reikiamus laukus:\n\n${publicUrl}\n\nNuoroda galios iki: ${new Date(generatedLink.expires_at).toLocaleString("lt-LT", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}\n\nJei turite klausimų, susisiekite su mumis.\n\nPagarbiai`
-                  );
+                  const body = encodeURIComponent(`Sveiki,\n\nSiunčiu jums sutartį pasirašymui.\n\nPaspauskite žemiau esančią nuorodą, peržiūrėkite sutartį ir užpildykite reikiamus laukus:\n\n${publicUrl}\n\nPagarbiai`);
                   return `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
                 })() : "#"}
                 onClick={(e) => { if (!recipientEmail) e.preventDefault(); }}
-                className={`shrink-0 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-                  recipientEmail
-                    ? "bg-white text-zinc-950 hover:bg-zinc-200"
-                    : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                }`}
+                className={`shrink-0 text-sm font-medium px-3 py-2 rounded-md transition-colors ${recipientEmail ? "bg-white text-zinc-950 hover:bg-zinc-200" : "bg-zinc-800 text-zinc-600 cursor-not-allowed"}`}
               >
                 Siųsti →
               </a>
             </div>
           </div>
 
-          <button
-            onClick={() => handleRevoke(generatedLink.id)}
-            className="text-xs text-red-400 hover:text-red-300 transition-colors w-fit"
-          >
+          <button onClick={() => handleRevoke(generatedLink.id)} className="text-xs text-red-400 hover:text-red-300 transition-colors w-fit">
             Panaikinti šią nuorodą
           </button>
         </div>

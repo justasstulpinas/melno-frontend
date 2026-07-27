@@ -75,7 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SessionWarning />
       <aside className="flex flex-col w-56 shrink-0 bg-zinc-950 border-r border-zinc-800">
         <div className="flex items-center h-14 px-5 border-b border-zinc-800">
-          <span className="text-base font-semibold text-white tracking-tight">Melno</span>
+          <img src="/logo.png" alt="Melno" className="h-7 w-auto" />
         </div>
 
         <nav className="flex flex-col gap-0.5 p-3 flex-1">

@@ -12,7 +12,7 @@ export default function LandingPage() {
 
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-sm">
-        <span className="text-base font-semibold tracking-tight">Melno</span>
+        <img src="/logo.png" alt="Melno" className="h-7 w-auto" />
         <div className="flex items-center gap-4">
           <Link href="/login"
             className="text-sm text-zinc-400 hover:text-white transition-[color] duration-150">

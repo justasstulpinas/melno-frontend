@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Melno",
   description: "Sutarčių šablonai laisvai samdomiems darbuotojams",
   themeColor: "#09090b",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

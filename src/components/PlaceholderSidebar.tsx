@@ -120,9 +120,25 @@ const ALL_BUILTIN = [
   ...CLIENT_BUILTIN,
   ...SYS_BUILTIN,
   { label: "Parašas", value: "signature" },
+  { label: "Jūsų parašas", value: "user_signature" },
 ].map((i) => i.value);
 
-export default function PlaceholderSidebar({ editorRef }: { editorRef: RefObject<RichTextEditorHandle | null> }) {
+type OverlayControls = {
+  logoActive?: boolean;
+  onLogoToggle?: () => void;
+  clientSigActive?: boolean;
+  onClientSigToggle?: () => void;
+  userSigActive?: boolean;
+  onUserSigToggle?: () => void;
+};
+
+export default function PlaceholderSidebar({
+  editorRef,
+  overlays = {},
+}: {
+  editorRef: RefObject<RichTextEditorHandle | null>;
+  overlays?: OverlayControls;
+}) {
   const [ownerCustom, setOwnerCustom] = useState<Item[]>([]);
   const [clientCustom, setClientCustom] = useState<Item[]>([]);
 
@@ -172,6 +188,19 @@ export default function PlaceholderSidebar({ editorRef }: { editorRef: RefObject
             onAdd={(item) => setOwnerCustom((p) => [...p, item])}
             editorRef={editorRef}
           />
+          {overlays.onLogoToggle && (
+            <button
+              type="button"
+              onClick={overlays.onLogoToggle}
+              className={`text-left text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                overlays.logoActive
+                  ? "bg-blue-950 border-blue-700 text-blue-300"
+                  : "bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700"
+              }`}
+            >
+              {overlays.logoActive ? "✓ Logotipas" : "+ Pridėti logotipą"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -216,14 +245,43 @@ export default function PlaceholderSidebar({ editorRef }: { editorRef: RefObject
         </div>
       </div>
 
-      {/* Signature */}
+      {/* Signatures */}
       <div>
         <div className="flex items-center gap-1.5 mb-2">
           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor.zinc}`} />
-          <p className="text-xs font-medium text-zinc-500">Parašas</p>
+          <p className="text-xs font-medium text-zinc-500">Parašai</p>
         </div>
         <div className="flex flex-col gap-1">
-          {renderChips([{ label: "Parašas", value: "signature" }])}
+          {overlays.onClientSigToggle ? (
+            <button
+              type="button"
+              onClick={overlays.onClientSigToggle}
+              className={`text-left text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                overlays.clientSigActive
+                  ? "bg-zinc-700 border-zinc-500 text-white"
+                  : "bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700"
+              }`}
+            >
+              {overlays.clientSigActive ? "✓ Kliento parašas" : "+ Kliento parašas"}
+            </button>
+          ) : (
+            renderChips([{ label: "Kliento parašas", value: "signature" }])
+          )}
+          {overlays.onUserSigToggle ? (
+            <button
+              type="button"
+              onClick={overlays.onUserSigToggle}
+              className={`text-left text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                overlays.userSigActive
+                  ? "bg-zinc-700 border-zinc-500 text-white"
+                  : "bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700"
+              }`}
+            >
+              {overlays.userSigActive ? "✓ Jūsų parašas" : "+ Jūsų parašas"}
+            </button>
+          ) : (
+            renderChips([{ label: "Jūsų parašas", value: "user_signature" }])
+          )}
         </div>
       </div>
     </aside>
