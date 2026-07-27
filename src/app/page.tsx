@@ -2,200 +2,213 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Melno. Sutartys be galvos skausmo",
-  description: "Sukurk šabloną, išsiųsk nuorodą, gauk parašą per minutę. Elektroninės sutartys Lietuvos verslininkams.",
+  title: "Melno — Sutartys be galvos skausmo",
+  description: "Sukurk šabloną vieną kartą, išsiųsk nuorodą klientui, gauk pasirašytą dokumentą. Elektroninės sutartys Lietuvos verslininkams.",
 };
+
+const steps = [
+  {
+    n: "01",
+    title: "Įkelkite sutarties šabloną",
+    body: "Įkelkite savo Word (.docx) failą arba sukurkite šabloną tiesiogiai redaktoriuje. Pažymėkite laukus kuriuos užpildys klientas.",
+  },
+  {
+    n: "02",
+    title: "Išsiųskite nuorodą klientui",
+    body: "Sugeneruokite unikalią nuorodą su savo duomenimis iš anksto užpildytais. Klientui paskyra nereikalinga.",
+  },
+  {
+    n: "03",
+    title: "Gaukite pasirašytą dokumentą",
+    body: "Klientas užpildo duomenis ir pasirašo ekrane. Jums patvirtinus — sutartis PDF arba DOCX formate iš karto.",
+  },
+];
+
+const plans = [
+  {
+    name: "Nemokamas",
+    price: "0€",
+    period: "/ mėn.",
+    description: "Tobulas pradžiai.",
+    features: [
+      "Iki 3 šablonų",
+      "Iki 10 sutarčių / mėn.",
+      "PDF ir DOCX eksportas",
+      "El. pašto pranešimai",
+    ],
+    cta: "Pradėti nemokamai",
+    href: "/register",
+    highlight: false,
+  },
+  {
+    name: "Pro",
+    price: "19€",
+    period: "/ mėn.",
+    description: "Neribotam verslui.",
+    features: [
+      "Neriboti šablonai",
+      "Neriboti sutartys",
+      "Įmonės logotipas dokumentuose",
+      "Prioritetinis palaikymas",
+    ],
+    cta: "Pradėti Pro",
+    href: "/register",
+    highlight: true,
+  },
+];
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-zinc-950 text-white">
 
-      {/* ── Nav ── */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-sm">
-        <span className="text-base font-semibold tracking-tight">Melno</span>
-        <div className="flex items-center gap-4">
-          <Link href="/login"
-            className="text-sm text-zinc-400 hover:text-white transition-[color] duration-150">
-            Prisijungti
-          </Link>
-          <Link href="/register"
-            className="text-sm bg-white text-zinc-950 px-4 py-1.5 rounded-md font-medium hover:bg-zinc-200 transition-[background-color] duration-150 active:scale-[0.96] transition-transform">
-            Pradėti nemokamai
-          </Link>
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <img src="/logo.png" alt="Melno" className="h-8 w-auto" />
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-1.5">
+              Prisijungti
+            </Link>
+            <Link href="/register" className="text-sm bg-white text-zinc-950 px-4 py-1.5 rounded-md font-medium hover:bg-zinc-200 transition-colors">
+              Pradėti nemokamai
+            </Link>
+          </div>
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="flex flex-col items-center text-center px-6 pt-24 pb-20">
-        <div className="hero-item inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 text-xs text-zinc-400 mb-8">
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-6 pt-28 pb-24 text-center">
+        <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-1.5 text-xs text-zinc-400 mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-          Sukurta freelanceriams Lietuvoje.
+          Šiuo metu nemokama visiems
         </div>
-        <h1 className="hero-item text-5xl sm:text-6xl font-bold leading-tight max-w-3xl mb-6 tracking-tight text-balance">
-          Sutartis: 3 minutės.<br />
-          <span className="text-zinc-400">Ne 3 dienos.</span>
+
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.08] mb-6 max-w-4xl mx-auto">
+          Sutartys.<br />
+          <span className="text-zinc-500">Greičiau nei kada nors.</span>
         </h1>
-        <p className="hero-item text-lg text-zinc-400 max-w-xl mb-10 leading-relaxed text-pretty">
-          Sukurk šabloną vieną kartą, išsiųsk nuorodą klientui, gauk pasirašytą dokumentą. Viskas vienoje vietoje.
+
+        <p className="text-lg text-zinc-400 max-w-xl mx-auto mb-10 leading-relaxed">
+          Įkelk savo Word šabloną, išsiųsk nuorodą klientui ir gauk pasirašytą dokumentą — visa tai per kelias minutes.
         </p>
-        <div className="hero-item flex flex-col sm:flex-row items-center gap-4">
-          <Link href="/register"
-            className="bg-white text-zinc-950 px-6 py-3 rounded-md text-sm font-semibold hover:bg-zinc-200 transition-[background-color] duration-150 active:scale-[0.96] transition-transform w-full sm:w-auto text-center">
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/register"
+            className="bg-white text-zinc-950 px-7 py-3 rounded-md text-sm font-semibold hover:bg-zinc-200 transition-colors w-full sm:w-auto text-center"
+          >
             Pradėti nemokamai →
           </Link>
-          <Link href="/login"
-            className="text-sm text-zinc-500 hover:text-white transition-[color] duration-150">
+          <Link
+            href="/login"
+            className="text-sm text-zinc-500 hover:text-white transition-colors"
+          >
             Jau turite paskyrą? Prisijungti
           </Link>
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="border-t border-zinc-800 px-6 py-20">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center mb-3">Kaip tai veikia</p>
-          <h2 className="text-2xl font-bold text-center mb-14 text-balance">
-            Trys žingsniai iki pasirašytos sutarties, greičiau nei surašyti el. laišką
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {[
-              {
-                n: "1",
-                title: "Sukurkite šabloną vieną kartą",
-                body: "Parašykite sutartį su laukų žymekliais kaip {{kliento_vardas}}. Paruošę šabloną naudokite jį neribotai.",
-              },
-              {
-                n: "2",
-                title: "Išsiųskite nuorodą per 30 sekundžių",
-                body: "Sugeneruokite unikalią nuorodą su iš anksto užpildytais jūsų duomenimis. Išsiųskite klientui per el. paštą ar žinutes.",
-              },
-              {
-                n: "3",
-                title: "Gaukite pasirašytą dokumentą.",
-                body: "Klientas užpildo savo duomenis ir pasirašo ranka ekrane. Jums patvirtinus sutartį galite ją parsisiųsti PDF arba DOCX formatu.",
-              },
-            ].map((step) => (
-              <div key={step.n} className="flex flex-col">
-                <div className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm font-semibold text-zinc-300 mb-5">
-                  {step.n}
+      {/* Divider */}
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="h-px bg-zinc-800" />
+      </div>
+
+      {/* How it works */}
+      <section className="max-w-6xl mx-auto px-6 py-24">
+        <div className="text-center mb-16">
+          <p className="text-xs font-semibold text-zinc-600 uppercase tracking-widest mb-3">Kaip tai veikia</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Trys žingsniai iki pasirašytos sutarties</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {steps.map((step, i) => (
+            <div key={step.n} className="relative">
+              {i < steps.length - 1 && (
+                <div className="hidden md:block absolute top-6 left-[calc(100%+1px)] w-full h-px bg-zinc-800 z-0" style={{ width: "calc(100% - 48px)", left: "calc(100% + 24px)" }} />
+              )}
+              <div className="relative z-10">
+                <div className="w-10 h-10 rounded-full border border-zinc-800 bg-zinc-900 flex items-center justify-center mb-5">
+                  <span className="text-xs font-semibold text-zinc-400">{step.n}</span>
                 </div>
-                <h3 className="text-base font-semibold text-white mb-2 text-balance">{step.title}</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed text-pretty">{step.body}</p>
+                <h3 className="text-base font-semibold text-white mb-2">{step.title}</h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">{step.body}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="border-t border-zinc-800 px-6 py-20 bg-zinc-900/30">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest text-center mb-3">Funkcijos</p>
-          <h2 className="text-2xl font-bold text-center mb-14 text-balance">Viskas ko reikia laiko taupymui.</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                icon: (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                ),
-                title: "Redaktorius",
-                body: "Dokumentų redaktorius su A4 peržiūra. Sutartis atrodo profesionaliai nuo pirmos minutės.",
-              },
-              {
-                icon: (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                  </svg>
-                ),
-                title: "Dinaminiai laukai",
-                body: "Įterpkite žymeklius kaip {{kliento_vardas}} ar {{mano_įmonė}}. Jokio copy-paste tarp sutarčių.",
-              },
-              {
-                icon: (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                ),
-                title: "Pasidalinamos nuorodos",
-                body: "Kiekvienam klientui unikali nuoroda su galiojimo laiku. Klientui paskyra nereikalinga. Sutartis pasiekiama iš karto.",
-              },
-              {
-                icon: (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                ),
-                title: "Rašytinis parašas",
-                body: "Klientas pasirašo ranka tiesiai naršyklėje. Parašas įterpiamas į PDF.",
-              },
-              {
-                icon: (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                ),
-                title: "PDF ir DOCX eksportas",
-                body: "Kiekviena pasirašyta sutartis vienu paspaudimu kaip PDF arba Word. Visos tavo sutartys vienoje vietoje.",
-              },
-              {
-                icon: (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                ),
-                title: "Sutarčių sekimas",
-                body: "Matyk visų sutarčių būsenas realiuoju laiku: laukiama, pasirašyta, patvirtinta.",
-              },
-            ].map((f) => (
-              <div key={f.title}
-                className="bg-zinc-900 rounded-xl p-5"
-                style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.07), 0 1px 3px rgba(0,0,0,0.3)" }}>
-                <div className="w-8 h-8 bg-zinc-800 rounded-md flex items-center justify-center mb-4 text-zinc-300"
-                  style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
-                  {f.icon}
+      {/* Divider */}
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="h-px bg-zinc-800" />
+      </div>
+
+      {/* Pricing */}
+      <section className="max-w-6xl mx-auto px-6 py-24">
+        <div className="text-center mb-16">
+          <p className="text-xs font-semibold text-zinc-600 uppercase tracking-widest mb-3">Kainos</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Paprasta kainodara</h2>
+          <p className="text-sm text-zinc-500">Be paslėptų mokesčių. Atšaukite bet kada.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`rounded-2xl p-8 flex flex-col ${
+                plan.highlight
+                  ? "bg-white text-zinc-950"
+                  : "bg-zinc-900 border border-zinc-800 text-white"
+              }`}
+            >
+              <div className="mb-6">
+                <p className={`text-xs font-semibold uppercase tracking-widest mb-3 ${plan.highlight ? "text-zinc-500" : "text-zinc-500"}`}>
+                  {plan.name}
+                </p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                  <span className={`text-sm ${plan.highlight ? "text-zinc-500" : "text-zinc-500"}`}>{plan.period}</span>
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-2 text-balance">{f.title}</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed text-pretty">{f.body}</p>
+                <p className={`text-sm ${plan.highlight ? "text-zinc-600" : "text-zinc-500"}`}>{plan.description}</p>
               </div>
-            ))}
-          </div>
+
+              <ul className="flex flex-col gap-2.5 mb-8 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm">
+                    <svg className={`w-4 h-4 shrink-0 ${plan.highlight ? "text-zinc-950" : "text-emerald-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className={plan.highlight ? "text-zinc-700" : "text-zinc-300"}>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href={plan.href}
+                className={`text-sm font-semibold py-3 rounded-md text-center transition-colors ${
+                  plan.highlight
+                    ? "bg-zinc-950 text-white hover:bg-zinc-800"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700"
+                }`}
+              >
+                {plan.cta}
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Pricing coming soon ── */}
-      <section className="border-t border-zinc-800 px-6 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3">Kainos</p>
-          <h2 className="text-2xl font-bold mb-4 text-balance">Mes dar tik augame!</h2>
-          <p className="text-sm text-zinc-500 mb-8 text-pretty">Mokami planai greitai. Naudokitės laisvai, viskas nemokama!</p>
-          <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400"
-            style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.06)" }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-            Šiuo metu nemokama visiems
-          </div>
+      {/* Footer */}
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="h-px bg-zinc-800" />
+      </div>
+      <footer className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <img src="/logo.png" alt="Melno" className="h-6 w-auto" />
+        <p className="text-xs text-zinc-600">© 2026 Melno. Visos teisės saugomos.</p>
+        <div className="flex gap-4">
+          <Link href="/login" className="text-xs text-zinc-600 hover:text-white transition-colors">Prisijungti</Link>
+          <Link href="/register" className="text-xs text-zinc-600 hover:text-white transition-colors">Registruotis</Link>
         </div>
-      </section>
-
-      {/* ── Bottom CTA ── */}
-      <section className="border-t border-zinc-800 px-6 py-20 bg-zinc-900/30">
-        <div className="max-w-xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4 text-balance">Pirmą sutartį sukursi dar šiandien.</h2>
-          <p className="text-zinc-400 mb-8 leading-relaxed text-pretty">
-            Prisijunk prie verslininkų, kurie nebepraranda laiko sutartims.
-          </p>
-          <Link href="/register"
-            className="inline-block bg-white text-zinc-950 px-8 py-3 rounded-md text-sm font-semibold hover:bg-zinc-200 transition-[background-color] duration-150 active:scale-[0.96] transition-transform">
-            Pradėti nemokamai
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-zinc-800 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-white">Melno © 2026</span>
-        <p className="text-xs text-zinc-600">Privatumo politika · Sąlygos</p>
       </footer>
 
     </div>
