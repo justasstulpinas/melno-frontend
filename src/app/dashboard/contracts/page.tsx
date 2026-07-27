@@ -275,13 +275,6 @@ function ContractModal({
                     <DownloadBtn submissionId={item.id} format="docx" label="Atsisiųsti DOCX" />
                   </>
                 )}
-                <button
-                  onClick={handleSaveContact}
-                  disabled={savingContact || contactSaved}
-                  className="text-xs text-zinc-400 hover:text-emerald-400 border border-zinc-700 hover:border-emerald-800 px-3 py-2 rounded-md transition-colors disabled:opacity-50"
-                >
-                  {contactSaved ? "✓ Kontaktas išsaugotas" : savingContact ? "Išsaugoma…" : "+ Išsaugoti kaip kontaktą"}
-                </button>
               </div>
             </div>
           ) : (
