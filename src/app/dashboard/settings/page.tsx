@@ -331,15 +331,15 @@ export default function SettingsPage() {
         </div>
 
         {/* Company logo */}
-        <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex flex-col items-center gap-2 shrink-0">
           <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
           {profile?.logo_image ? (
             <>
               <div
-                className="w-24 h-16 bg-white rounded-lg border border-zinc-700 flex items-center justify-center p-2 cursor-pointer hover:border-zinc-500 transition-colors"
+                className="w-20 h-20 bg-white rounded-xl border border-zinc-700 flex items-center justify-center p-2 cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden"
                 onClick={() => logoInputRef.current?.click()}
               >
-                <img src={`data:image/png;base64,${profile.logo_image}`} alt="Logotipas" className="max-w-full max-h-full object-contain" />
+                <img src={`data:image/png;base64,${profile.logo_image}`} alt="Logotipas" className="w-full h-full object-contain" />
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => logoInputRef.current?.click()} disabled={savingLogo} className="text-[10px] text-zinc-500 hover:text-white transition-colors">
@@ -355,7 +355,7 @@ export default function SettingsPage() {
               type="button"
               onClick={() => logoInputRef.current?.click()}
               disabled={savingLogo}
-              className="w-24 h-16 border border-dashed border-zinc-700 hover:border-zinc-500 rounded-lg flex flex-col items-center justify-center gap-1 text-zinc-600 hover:text-zinc-400 transition-colors disabled:opacity-50"
+              className="w-20 h-20 border border-dashed border-zinc-700 hover:border-zinc-500 rounded-full flex flex-col items-center justify-center gap-1 text-zinc-600 hover:text-zinc-400 transition-colors disabled:opacity-50"
             >
               <span className="text-lg leading-none">+</span>
               <span className="text-[10px]">{savingLogo ? "Įkeliama…" : "Logotipas"}</span>
