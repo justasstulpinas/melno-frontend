@@ -83,7 +83,7 @@ function hasInfo(p: Profile | null) {
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editingInfo, setEditingInfo] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [form, setForm] = useState({ profile_name: "", company_name: "", company_code: "", address: "", phone_number: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -110,6 +110,17 @@ export default function SettingsPage() {
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
+  function openEditModal() {
+    setForm({
+      profile_name: profile?.profile_name ?? "",
+      company_name: profile?.company_name ?? "",
+      company_code: profile?.company_code ?? "",
+      address: profile?.address ?? "",
+      phone_number: profile?.phone_number ?? "",
+    });
+    setShowEditModal(true);
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -117,8 +128,7 @@ export default function SettingsPage() {
       const updated = await api.updateProfile(form);
       setProfile(updated);
       setSaved(true);
-      setEditingInfo(false);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => { setSaved(false); setShowEditModal(false); }, 1000);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Nepavyko išsaugoti");
     } finally {
@@ -214,11 +224,58 @@ export default function SettingsPage() {
 
   if (loading) return <div className="p-8 text-sm text-zinc-500">Kraunama…</div>;
 
-  const infoFilled = hasInfo(profile);
   const nameFilled = !!profile?.profile_name;
 
   return (
     <div className="p-8 max-w-2xl">
+      {/* Edit modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+              <h2 className="text-sm font-semibold text-white">Redaguoti profilį</h2>
+              <button onClick={() => setShowEditModal(false)} className="text-zinc-500 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">Rodomas vardas</label>
+                <input value={form.profile_name} onChange={(e) => setForm({ ...form, profile_name: e.target.value })} placeholder="Jūsų vardas" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
+              </div>
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">Įmonės pavadinimas</label>
+                <input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="MB Mano Įmonė" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1">Įmonės / IV kodas</label>
+                  <input value={form.company_code} onChange={(e) => setForm({ ...form, company_code: e.target.value })} placeholder="304512345" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1">Telefonas</label>
+                  <input value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} placeholder="+370 600 00000" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">Adresas</label>
+                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Gedimino pr. 1, Vilnius" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" disabled={saving} className="bg-white text-zinc-950 px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50">
+                  {saved ? "Išsaugota!" : saving ? "Išsaugoma…" : "Išsaugoti"}
+                </button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="text-sm text-zinc-500 hover:text-white transition-colors px-2">
+                  Atšaukti
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl font-semibold text-white mb-8">Profilis</h1>
 
       {/* Avatar + Logo row */}
@@ -308,68 +365,28 @@ export default function SettingsPage() {
 
       <div className="h-px bg-zinc-800 mb-6" />
 
-      {/* Profile info */}
+      {/* Profile info card */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-white">Įmonės informacija</h2>
-          {infoFilled && !editingInfo && (
-            <button type="button" onClick={() => setEditingInfo(true)} className="text-xs text-zinc-500 hover:text-white transition-colors">
-              Redaguoti
-            </button>
-          )}
+          <button type="button" onClick={openEditModal} className="text-xs text-zinc-500 hover:text-white transition-colors">
+            Redaguoti
+          </button>
         </div>
-
-        {editingInfo || !infoFilled ? (
-          <form onSubmit={handleSave} className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Rodomas vardas</label>
-                <input value={form.profile_name} onChange={(e) => setForm({ ...form, profile_name: e.target.value })} placeholder="Jūsų vardas" className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700" />
-              </div>
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Įmonės pavadinimas</label>
-                <input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="MB Mano Įmonė" className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700" />
-              </div>
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Įmonės / IV kodas</label>
-                <input value={form.company_code} onChange={(e) => setForm({ ...form, company_code: e.target.value })} placeholder="304512345" className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700" />
-              </div>
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Telefonas</label>
-                <input value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} placeholder="+370 600 00000" className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700" />
-              </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: "Vardas", value: profile?.profile_name },
+            { label: "Įmonė", value: profile?.company_name },
+            { label: "Kodas", value: profile?.company_code },
+            { label: "Telefonas", value: profile?.phone_number },
+            { label: "Adresas", value: profile?.address },
+          ].map(f => (
+            <div key={f.label} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-0.5">{f.label}</p>
+              <p className="text-sm text-white">{f.value || <span className="text-zinc-600">—</span>}</p>
             </div>
-            <div>
-              <label className="block text-xs text-zinc-500 mb-1">Adresas</label>
-              <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Gedimino pr. 1, Vilnius" className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700" />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button type="submit" disabled={saving} className="bg-white text-zinc-950 px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50">
-                {saved ? "Išsaugota!" : saving ? "Išsaugoma…" : "Išsaugoti"}
-              </button>
-              {editingInfo && infoFilled && (
-                <button type="button" onClick={() => setEditingInfo(false)} className="text-sm text-zinc-500 hover:text-white transition-colors px-2">
-                  Atšaukti
-                </button>
-              )}
-            </div>
-          </form>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Vardas", value: profile?.profile_name },
-              { label: "Įmonė", value: profile?.company_name },
-              { label: "Kodas", value: profile?.company_code },
-              { label: "Telefonas", value: profile?.phone_number },
-              { label: "Adresas", value: profile?.address },
-            ].filter(f => f.value).map(f => (
-              <div key={f.label} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-0.5">{f.label}</p>
-                <p className="text-sm text-white">{f.value}</p>
-              </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
       <div className="h-px bg-zinc-800 mb-6" />
