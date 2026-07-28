@@ -55,57 +55,47 @@ export default function LandingPage() {
     <div className={`${syne.className} min-h-screen bg-black text-white`}>
 
       {/* ── Nav ── */}
-      <nav className="flex items-center justify-between px-8 py-6">
-        <span className="text-sm font-semibold tracking-[0.15em] uppercase text-white">Melno</span>
-        <div className="flex items-center gap-4">
+      <nav className="relative z-10 flex items-center justify-between px-10 py-7">
+        <span className="text-sm font-semibold tracking-[0.18em] uppercase text-white">Melno</span>
+        <div className="flex items-center gap-5">
           <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Prisijungti
           </Link>
-          <Link href="/register" className="text-sm border border-white/30 hover:border-white text-white px-5 py-2 rounded-full transition-colors">
+          <Link href="/register" className="text-sm border border-white/25 hover:border-white/60 text-white px-6 py-2 rounded-full transition-colors">
             Registruotis
           </Link>
         </div>
       </nav>
 
       {/* ── Hero ── */}
-      <section className="flex items-center min-h-[calc(100vh-80px)] px-8 gap-0">
+      <section className="relative flex items-center min-h-[calc(100vh-72px)] overflow-hidden px-10">
 
-        {/* Left */}
-        <div className="flex-1 flex flex-col justify-center max-w-xl">
-          <h1 className="text-6xl sm:text-7xl font-semibold leading-[1.05] tracking-tight mb-6">
+        {/* Left — text */}
+        <div className="relative z-10 flex flex-col justify-center max-w-lg">
+          <h1 className="text-[clamp(3.5rem,7vw,6rem)] font-semibold leading-[1.02] tracking-tight mb-6">
             Sutartys.<br />
             Be galvos<br />
             skausmo.
           </h1>
-          <p className="text-base text-zinc-400 leading-relaxed max-w-sm mb-10">
+          <p className="text-base text-zinc-400 leading-relaxed max-w-xs">
             Įkelk savo Word šabloną, išsiųsk nuorodą klientui ir gauk pasirašytą dokumentą — visa tai per kelias minutes.
           </p>
-          <div className="flex items-center gap-4">
-            <Link href="/register" className="bg-white text-black text-sm font-semibold px-6 py-3 rounded-full hover:bg-zinc-200 transition-colors">
-              Pradėti nemokamai →
-            </Link>
-            <Link href="/login" className="text-sm text-zinc-500 hover:text-white transition-colors">
-              Jau turiu paskyrą
-            </Link>
-          </div>
         </div>
 
-        {/* Right — logo in circle */}
-        <div className="flex-1 flex items-center justify-center">
-          <div
-            className="relative flex items-center justify-center rounded-full"
-            style={{
-              width: "min(55vw, 620px)",
-              height: "min(55vw, 620px)",
-              background: "radial-gradient(circle, #1a1a1a 0%, #0a0a0a 70%)",
-            }}
-          >
-            <img
-              src="/logo.png"
-              alt="Melno"
-              className="w-3/5 h-3/5 object-contain"
-            />
-          </div>
+        {/* Right — large circle with logo, bleeds off screen */}
+        <div
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[12%] rounded-full flex items-center justify-center"
+          style={{
+            width: "90vh",
+            height: "90vh",
+            background: "#111111",
+          }}
+        >
+          <img
+            src="/logo.png"
+            alt="Melno"
+            style={{ width: "55%", height: "55%", objectFit: "contain" }}
+          />
         </div>
       </section>
 
