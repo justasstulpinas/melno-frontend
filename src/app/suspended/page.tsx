@@ -18,7 +18,7 @@ export default function SuspendedPage() {
   return (
     <div className="min-h-screen flex">
       <div className="hidden lg:flex flex-col justify-between w-1/3 bg-zinc-900 px-10 py-12">
-        <Link href="/" className=""><img src="/logo.png" alt="Melno" className="h-7 w-auto"</Link>
+        <Link href="/" className=""><img src="/logo.png" alt="Melno" className="h-7 w-auto" /></Link>
         <div>
           <p className={`${syne.className} text-4xl font-semibold text-white leading-snug mb-6`}>
             Sutartys.<br />Greitai.<br />Paprastai.
@@ -32,7 +32,7 @@ export default function SuspendedPage() {
 
       <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
-          <Link href="/" className="block mb-10 lg:hidden"><img src="/logo.png" alt="Melno" className="h-7 w-auto"</Link>
+          <Link href="/" className="block mb-10 lg:hidden"><img src="/logo.png" alt="Melno" className="h-7 w-auto" /></Link>
 
           <div className="w-12 h-12 rounded-full bg-red-950 border border-red-800 flex items-center justify-center mx-auto mb-6">
             <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

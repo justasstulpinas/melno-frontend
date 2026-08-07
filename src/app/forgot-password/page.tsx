@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex">
       <div className="hidden lg:flex flex-col justify-between w-1/3 bg-zinc-900 px-10 py-12">
-        <Link href="/" className=""><img src="/logo.png" alt="Melno" className="h-7 w-auto"</Link>
+        <Link href="/" className=""><img src="/logo.png" alt="Melno" className="h-7 w-auto" /></Link>
         <div>
           <p className={`${syne.className} text-4xl font-semibold text-white leading-snug mb-6`}>
             Sutartys.<br />Greitai.<br />Paprastai.
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
 
       <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <Link href="/" className="block mb-10 lg:hidden text-center"><img src="/logo.png" alt="Melno" className="h-7 w-auto mx-auto"</Link>
+          <Link href="/" className="block mb-10 lg:hidden text-center"><img src="/logo.png" alt="Melno" className="h-7 w-auto mx-auto" /></Link>
 
           {!submitted ? (
             <>
