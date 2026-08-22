@@ -133,16 +133,21 @@ export function HoldToDeleteButton({ onDelete, label = "Ištrinti" }: Props) {
         className="flex items-center gap-1.5 text-xs text-red-400/70 hover:text-red-400 select-none transition-colors cursor-pointer"
         aria-label={label}
       >
-        <svg className="-rotate-90 shrink-0" width="14" height="14" viewBox="0 0 28 28">
-          <circle cx="14" cy="14" r={R} fill="none" stroke={phase === "holding" ? "#3f3f46" : "transparent"} strokeWidth="3" />
-          <circle
-            cx="14" cy="14" r={R} fill="none" stroke="#f87171" strokeWidth="3"
-            strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={CIRCUMFERENCE * (1 - holdPct)}
-            strokeLinecap="round"
-          />
-        </svg>
-        {label}
+        {phase === "holding" ? (
+          <svg className="-rotate-90 shrink-0" width="14" height="14" viewBox="0 0 28 28">
+            <circle cx="14" cy="14" r={R} fill="none" stroke="#3f3f46" strokeWidth="3" />
+            <circle
+              cx="14" cy="14" r={R} fill="none" stroke="#f87171" strokeWidth="3"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={CIRCUMFERENCE * (1 - holdPct)}
+              strokeLinecap="round"
+            />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        )}
       </button>
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
