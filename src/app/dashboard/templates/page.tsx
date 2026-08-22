@@ -134,15 +134,6 @@ export default function TemplatesPage() {
         onChange={handleDocxUpload}
       />
 
-      {/* Drag label inside the border */}
-      {dragOver && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none gap-3">
-          <svg className="w-10 h-10 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p className="text-white/60 text-base font-medium">Paleiskite norėdami įkelti</p>
-        </div>
-      )}
 
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -163,19 +154,25 @@ export default function TemplatesPage() {
       {actionError && <p className="text-sm text-red-400 bg-red-950/30 border border-red-900/40 rounded-full px-4 py-2 mb-2">{actionError}</p>}
 
       {!loading && templates.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24 border border-dashed border-zinc-800 rounded-xl transition-colors">
-          <svg className="w-8 h-8 text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`flex flex-col items-center justify-center py-24 border border-dashed rounded-xl transition-all duration-150 ${dragOver ? "border-white/40 bg-white/[0.02]" : "border-zinc-800"}`}>
+          <svg className={`w-8 h-8 mb-4 transition-colors ${dragOver ? "text-white/50" : "text-zinc-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-sm text-zinc-500 mb-1">Nutempkite .docx failą čia</p>
-          <p className="text-xs text-zinc-600 mb-5">arba</p>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2"
-          >
-            {uploading && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
-            {uploading ? "Konvertuojama…" : "Pasirinkti failą"}
-          </button>
+          <p className={`text-sm mb-1 transition-colors ${dragOver ? "text-white/60" : "text-zinc-500"}`}>
+            {dragOver ? "Paleiskite norėdami įkelti" : "Nutempkite .docx failą čia"}
+          </p>
+          {!dragOver && (
+            <>
+              <p className="text-xs text-zinc-600 mb-5">arba</p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2"
+              >
+                {uploading && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
+                {uploading ? "Konvertuojama…" : "Pasirinkti failą"}
+              </button>
+            </>
+          )}
         </div>
       )}
 
