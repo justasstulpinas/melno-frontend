@@ -157,18 +157,14 @@ export default function TemplatesPage() {
           <p className={`text-sm mb-1 transition-colors ${dragOver ? "text-white/60" : "text-zinc-500"}`}>
             {dragOver ? "Paleiskite norėdami įkelti" : "Nutempkite .docx failą čia"}
           </p>
-          {!dragOver && (
-            <>
-              <p className="text-xs text-zinc-600 mb-5">arba</p>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2"
-              >
-                {uploading && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
-                {uploading ? "Konvertuojama…" : "Pasirinkti failą"}
-              </button>
-            </>
-          )}
+          <p className={`text-xs text-zinc-600 mb-5 transition-opacity ${dragOver ? "invisible" : ""}`}>arba</p>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className={`text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-all flex items-center gap-2 ${dragOver ? "invisible" : ""}`}
+          >
+            {uploading && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
+            {uploading ? "Konvertuojama…" : "Pasirinkti failą"}
+          </button>
         </div>
       )}
 
