@@ -333,13 +333,22 @@ function TemplateCard({
           </span>
         </div>
 
-        {(template.status === "draft" || template.status === "archived") && (
-          <div className="flex justify-end">
+        <div className="flex items-center justify-between mt-2">
+          {template.status === "active" ? (
+            <Link
+              href={`/dashboard/templates/${template.id}/link`}
+              className="text-xs bg-white text-zinc-950 px-3 py-1.5 rounded-full font-medium hover:bg-zinc-200 transition-colors"
+            >
+              + Nauja nuoroda
+            </Link>
+          ) : <span />}
+
+          {(template.status === "draft" || template.status === "archived") && (
             <div className="border-l border-red-900/30 pl-2">
               <HoldToDeleteButton onDelete={async () => onDelete(template.id)} />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
