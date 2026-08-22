@@ -305,7 +305,8 @@ export default function TemplatesPage() {
   );
 }
 
-function stripHtml(html: string) {
+function stripHtml(html: string | null | undefined) {
+  if (!html) return "";
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
