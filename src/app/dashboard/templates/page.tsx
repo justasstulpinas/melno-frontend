@@ -152,7 +152,7 @@ export default function TemplatesPage() {
 
   return (
     <div
-      className="p-8 max-w-5xl"
+      className="p-8"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
