@@ -16,7 +16,8 @@ export default function TemplatesPage() {
   const [actionError, setActionError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; uploadedAt: Date } | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; uploadedAt: Date; html: string } | null>(null);
+  const [addingToTemplates, setAddingToTemplates] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
@@ -38,7 +39,7 @@ export default function TemplatesPage() {
       const { html } = await api.uploadDocx(file);
       sessionStorage.setItem("docx_import_html", html);
       sessionStorage.setItem("docx_import_name", file.name.replace(/\.docx$/i, ""));
-      setUploadedFile({ name: file.name, size: file.size, uploadedAt: new Date() });
+      setUploadedFile({ name: file.name, size: file.size, uploadedAt: new Date(), html });
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Įkėlimas nepavyko");
     } finally {
@@ -114,6 +115,23 @@ export default function TemplatesPage() {
       router.push(`/dashboard/templates/${copy.id}/edit`);
     } catch (e: unknown) {
       setActionError(e instanceof Error ? e.message : "Nepavyko atlikti veiksmo");
+    }
+  }
+
+  async function handleAddDirectly() {
+    if (!uploadedFile) return;
+    setAddingToTemplates(true);
+    try {
+      const template = await api.createTemplate({
+        name: uploadedFile.name.replace(/\.docx$/i, ""),
+        content: uploadedFile.html,
+      });
+      setUploadedFile(null);
+      setTemplates((prev) => [...prev, template]);
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : "Nepavyko pridėti šablono");
+    } finally {
+      setAddingToTemplates(false);
     }
   }
 
@@ -218,9 +236,16 @@ export default function TemplatesPage() {
           <div className="flex flex-col gap-2 shrink-0">
             <button
               onClick={() => router.push("/dashboard/templates/new")}
-              className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors"
+              className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap"
             >
               Redaguoti failą →
+            </button>
+            <button
+              onClick={handleAddDirectly}
+              className="text-sm bg-zinc-800 text-white px-4 py-2 rounded-full font-medium hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              {addingToTemplates && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
+              {addingToTemplates ? "Pridedama…" : "Pridėti prie šablonų"}
             </button>
             <button
               onClick={() => { setUploadedFile(null); fileInputRef.current?.click(); }}
