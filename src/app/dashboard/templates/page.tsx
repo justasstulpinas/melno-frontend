@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { api, Template } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
+import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -58,13 +59,8 @@ export default function TemplatesPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Ištrinti šį šabloną?")) return;
-    try {
-      await api.deleteTemplate(id);
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
-    }
+    await api.deleteTemplate(id);
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
   }
 
   async function handleDuplicate(id: number) {
@@ -205,12 +201,9 @@ function TemplateCard({
           </Link>
         )}
         {(template.status === "draft" || template.status === "archived") && (
-          <button
-            onClick={() => onDelete(template.id)}
-            className="text-xs text-zinc-400 hover:text-red-400 transition-colors px-2 py-1"
-          >
-            Ištrinti
-          </button>
+          <div className="border-l border-red-900/30 pl-2">
+            <HoldToDeleteButton onDelete={async () => onDelete(template.id)} />
+          </div>
         )}
         <button
           onClick={() => onDuplicate(template.id)}

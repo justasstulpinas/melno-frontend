@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api, AdminStats, AdminUser, AdminTemplate, AdminSubmission } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortableHeader } from "@/components/SortableHeader";
+import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
@@ -128,7 +129,6 @@ export default function AdminPage() {
                     setUsers((prev) => prev.map((x) => x.id === id ? { ...x, is_suspended: updated.is_suspended } : x));
                   }}
                   onDelete={async (id) => {
-                    if (!confirm("Ištrinti šį vartotoją? Visi jo duomenys bus prarasti.")) return;
                     await api.adminDeleteUser(id);
                     setUsers((prev) => prev.filter((x) => x.id !== id));
                   }}
@@ -222,7 +222,6 @@ function UserRow({
   onVerify: (id: number) => Promise<void>;
 }) {
   const [loadingSuspend, setLoadingSuspend] = useState(false);
-  const [loadingDelete, setLoadingDelete] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -284,13 +283,9 @@ function UserRow({
           >
             {loadingSuspend ? "…" : u.is_suspended ? "Atblokuoti" : "Sustabdyti"}
           </button>
-          <button
-            onClick={async () => { setLoadingDelete(true); try { await onDelete(u.id); } finally { setLoadingDelete(false); } }}
-            disabled={loadingDelete}
-            className="text-xs text-zinc-400 hover:text-red-400 transition-colors disabled:opacity-50"
-          >
-            {loadingDelete ? "…" : "Ištrinti"}
-          </button>
+          <div className="border-l border-red-900/30 pl-2">
+            <HoldToDeleteButton onDelete={() => onDelete(u.id)} />
+          </div>
         </div>
       </td>
     </tr>

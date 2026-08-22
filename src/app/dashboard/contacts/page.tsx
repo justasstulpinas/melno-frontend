@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, Contact } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
+import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -48,13 +49,8 @@ export default function ContactsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Ištrinti šį kontaktą?")) return;
-    try {
-      await api.deleteContact(id);
-      setContacts((prev) => prev.filter((c) => c.id !== id));
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
-    }
+    await api.deleteContact(id);
+    setContacts((prev) => prev.filter((c) => c.id !== id));
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -161,9 +157,9 @@ export default function ContactsPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </button>
-                  <button onClick={() => handleDelete(c.id)} className="text-xs text-zinc-600 hover:text-red-400 transition-colors">
-                    Ištrinti
-                  </button>
+                  <div className="border-l border-red-900/30 pl-3">
+                    <HoldToDeleteButton onDelete={() => handleDelete(c.id)} />
+                  </div>
                 </div>
               </div>
             ))}
