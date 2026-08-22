@@ -22,9 +22,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const emailError = touched.email ? validateEmail(email) : null;
-  const emailSuccess = touched.email && !emailError;
   const passwordError = touched.password && !password.trim() ? "Slaptažodis yra privalomas" : null;
-  const passwordSuccess = touched.password && !!password.trim() && !passwordError;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -91,7 +89,6 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, email: true }))}
               errorMessage={emailError ?? undefined}
-              success={!!emailSuccess}
             />
             <FloatingInput
               label="Slaptažodis"
@@ -101,7 +98,6 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, password: true }))}
               errorMessage={passwordError ?? undefined}
-              success={!!passwordSuccess}
               rightElement={
                 <button type="button" tabIndex={-1} onClick={() => setShowPassword(!showPassword)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
                   {showPassword
