@@ -116,11 +116,7 @@ export default function TemplatesPage() {
 
   return (
     <div
-      className={`p-8 max-w-5xl relative min-h-[60vh] rounded-2xl border-2 transition-all duration-150 ${
-        dragOver
-          ? "border-dashed border-white/50 bg-white/[0.02] shadow-[0_0_40px_rgba(255,255,255,0.05)]"
-          : "border-transparent"
-      }`}
+      className="p-8 max-w-5xl"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
