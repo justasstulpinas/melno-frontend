@@ -116,7 +116,11 @@ export default function TemplatesPage() {
 
   return (
     <div
-      className="p-8 max-w-5xl relative"
+      className={`p-8 max-w-5xl relative min-h-[60vh] rounded-2xl border-2 transition-all duration-150 ${
+        dragOver
+          ? "border-dashed border-white/50 bg-white/[0.02] shadow-[0_0_40px_rgba(255,255,255,0.05)]"
+          : "border-transparent"
+      }`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -130,16 +134,13 @@ export default function TemplatesPage() {
         onChange={handleDocxUpload}
       />
 
-      {/* Drag overlay */}
+      {/* Drag label inside the border */}
       {dragOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-sm pointer-events-none">
-          <div className="border-2 border-dashed border-white/40 rounded-2xl px-20 py-16 flex flex-col items-center gap-4 shadow-[0_0_80px_rgba(255,255,255,0.08)]">
-            <svg className="w-12 h-12 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-white text-lg font-medium">Paleiskite norėdami įkelti</p>
-            <p className="text-zinc-400 text-sm">.docx failas</p>
-          </div>
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none gap-3">
+          <svg className="w-10 h-10 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-white/60 text-base font-medium">Paleiskite norėdami įkelti</p>
         </div>
       )}
 
