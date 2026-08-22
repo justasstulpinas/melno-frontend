@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Syne } from "next/font/google";
 import { api, saveToken } from "@/lib/api";
 import { FloatingInput } from "@/components/FloatingInput";
+import { validateEmail } from "@/lib/validation";
 
 const syne = Syne({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -16,12 +17,20 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const confirmMismatch = confirmTouched && confirm !== password;
+  const emailError = emailTouched ? validateEmail(email) : null;
+  const emailSuccess = emailTouched && !emailError;
+
+  const requirementsMet = password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  const passwordError = passwordTouched && !requirementsMet ? "Slaptažodis neatitinka reikalavimų" : null;
+  const passwordSuccess = passwordTouched && requirementsMet;
 
   const requirements = [
     { label: "Bent 12 simbolių", met: password.length >= 12 },
@@ -32,14 +41,10 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    if (password !== confirm) {
-      setError("Slaptažodžiai nesutampa");
-      return;
-    }
-    if (password.length < 12) {
-      setError("Slaptažodis turi būti bent 12 simbolių");
-      return;
-    }
+    setEmailTouched(true);
+    setPasswordTouched(true);
+    setConfirmTouched(true);
+    if (validateEmail(email) || !requirementsMet || password !== confirm) return;
     setError("");
     setLoading(true);
     try {
@@ -101,7 +106,16 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <FloatingInput label="Vardas" value={name} onChange={(e) => setName(e.target.value)} />
-            <FloatingInput label="El. paštas" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <FloatingInput
+              label="El. paštas"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
+              errorMessage={emailError ?? undefined}
+              success={!!emailSuccess}
+            />
             <div>
               <FloatingInput
                 label="Slaptažodis"
@@ -109,6 +123,9 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setPasswordTouched(true)}
+                errorMessage={passwordError ?? undefined}
+                success={!!passwordSuccess}
                 rightElement={
                   <button type="button" tabIndex={-1} onClick={() => setShowPassword(!showPassword)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
                     {showPassword
