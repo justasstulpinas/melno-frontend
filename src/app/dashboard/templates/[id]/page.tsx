@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, Template, Submission, PublicLink } from "@/lib/api";
+import { InlineTitle } from "@/components/InlineTitle";
 
 // ---- Helpers ----
 
@@ -82,6 +83,11 @@ export default function TemplateDetailPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function handleRename(name: string) {
+    setTemplate((t) => t ? { ...t, name } : t);
+    try { await api.updateTemplate(id, { name }); } catch {}
+  }
 
   async function handleDuplicate() {
     try {
@@ -178,7 +184,12 @@ export default function TemplateDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-3 mb-1 flex-wrap">
-              <h1 className="text-xl font-semibold text-white">{template.name}</h1>
+              <InlineTitle
+              value={template.name}
+              onSave={handleRename}
+              className="text-xl font-semibold text-white"
+              inputClassName="text-xl font-semibold"
+            />
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge[template.status]}`}>
                 {statusLabel[template.status]}
               </span>
@@ -222,6 +233,20 @@ export default function TemplateDetailPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── Document preview ── */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
+          <p className="text-xs font-medium text-zinc-400">Dokumento peržiūra</p>
+          <Link href={`/dashboard/templates/${id}/edit`} className="text-xs text-zinc-500 hover:text-white transition-colors">
+            Redaguoti →
+          </Link>
+        </div>
+        <div
+          className="p-8 max-h-[420px] overflow-y-auto text-sm text-zinc-300 leading-relaxed prose prose-invert prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: template.content ?? "" }}
+        />
       </div>
 
       {/* ── Tab cards ── */}

@@ -7,7 +7,6 @@ import { api, Template } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
 import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
-import { InlineTitle } from "@/components/InlineTitle";
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -119,15 +118,6 @@ export default function TemplatesPage() {
     }
   }
 
-  async function handleRename(id: number, name: string) {
-    setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, name } : t));
-    try {
-      await api.updateTemplate(id, { name });
-    } catch {
-      // silent — name still updated optimistically
-    }
-  }
-
   async function handleAddDirectly() {
     if (!uploadedFile) return;
     setAddingToTemplates(true);
@@ -226,16 +216,7 @@ export default function TemplatesPage() {
 
           {/* File info */}
           <div className="flex-1 min-w-0">
-            <InlineTitle
-              value={uploadedFile.name.replace(/\.docx$/i, "")}
-              onSave={(name) => {
-                const newName = name + ".docx";
-                setUploadedFile((f) => f ? { ...f, name: newName } : f);
-                sessionStorage.setItem("docx_import_name", name);
-              }}
-              className="text-sm font-medium text-white mb-1"
-              inputClassName="text-sm font-medium"
-            />
+            <p className="text-sm font-medium text-white mb-1">{uploadedFile.name}</p>
             <div className="flex items-center gap-3 text-xs text-zinc-500">
               <span>{formatBytes(uploadedFile.size)}</span>
               <span>·</span>
@@ -295,7 +276,6 @@ export default function TemplatesPage() {
               key={t.id}
               template={t}
               onDelete={handleDelete}
-              onRename={(name) => handleRename(t.id, name)}
             />
           ))}
         </div>
@@ -313,11 +293,9 @@ function stripHtml(html: string | null | undefined) {
 function TemplateCard({
   template,
   onDelete,
-  onRename,
 }: {
   template: Template;
   onDelete: (id: number) => void;
-  onRename: (name: string) => void;
 }) {
   const statusStyles: Record<string, string> = {
     draft: "bg-zinc-800 text-zinc-400",
@@ -336,12 +314,9 @@ function TemplateCard({
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:border-zinc-700 transition-colors">
       {/* Header row: name + status */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <InlineTitle
-          value={template.name}
-          onSave={onRename}
-          className="text-sm font-medium text-white"
-          inputClassName="text-sm font-medium"
-        />
+        <Link href={`/dashboard/templates/${template.id}`} className="text-sm font-medium text-white hover:text-zinc-300 transition-colors">
+          {template.name}
+        </Link>
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusStyles[template.status]}`}>
           {statusLabel[template.status]}
         </span>
