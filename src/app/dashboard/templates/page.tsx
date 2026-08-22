@@ -324,9 +324,13 @@ function TemplateCard({
 
       {/* Thumbnail */}
       <Link href={`/dashboard/templates/${template.id}`} className="block">
-        <div className="relative bg-white/[0.03] border border-zinc-800 rounded-lg p-3 h-20 overflow-hidden hover:border-zinc-700 transition-colors">
-          <p className="text-[9px] leading-relaxed text-zinc-600 select-none">{preview || "—"}</p>
-          <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+        <div className="relative h-40 overflow-hidden rounded-lg border border-zinc-800 bg-white hover:border-zinc-600 transition-colors">
+          <div
+            className="absolute top-0 left-0 origin-top-left pointer-events-none select-none"
+            style={{ width: "400%", transform: "scale(0.25)", fontSize: "14px", lineHeight: "1.6", padding: "24px", color: "#111" }}
+            dangerouslySetInnerHTML={{ __html: template.content ?? "" }}
+          />
+          <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent" />
         </div>
       </Link>
 
