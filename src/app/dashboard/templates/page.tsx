@@ -311,37 +311,36 @@ function TemplateCard({
   const preview = stripHtml(template.content).slice(0, 320);
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:border-zinc-700 transition-colors">
-      {/* Header row: name + status */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <Link href={`/dashboard/templates/${template.id}`} className="text-sm font-medium text-white hover:text-zinc-300 transition-colors">
-          {template.name}
-        </Link>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusStyles[template.status]}`}>
-          {statusLabel[template.status]}
-        </span>
-      </div>
-
-      {/* Thumbnail */}
-      <Link href={`/dashboard/templates/${template.id}`} className="block">
-        <div className="relative h-40 overflow-hidden rounded-lg border border-zinc-800 bg-white hover:border-zinc-600 transition-colors">
-          <div
-            className="absolute top-0 left-0 origin-top-left pointer-events-none select-none"
-            style={{ width: "400%", transform: "scale(0.25)", fontSize: "14px", lineHeight: "1.6", padding: "24px", color: "#111" }}
-            dangerouslySetInnerHTML={{ __html: template.content ?? "" }}
-          />
-          <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent" />
-        </div>
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex">
+      {/* Thumbnail — 1/3 width */}
+      <Link href={`/dashboard/templates/${template.id}`} className="relative w-1/3 shrink-0 bg-white overflow-hidden border-r border-zinc-800">
+        <div
+          className="absolute top-0 left-0 origin-top-left pointer-events-none select-none"
+          style={{ width: "400%", transform: "scale(0.25)", fontSize: "14px", lineHeight: "1.6", padding: "24px", color: "#111" }}
+          dangerouslySetInnerHTML={{ __html: template.content ?? "" }}
+        />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent" />
       </Link>
 
-      {/* Danger zone */}
-      {(template.status === "draft" || template.status === "archived") && (
-        <div className="mt-3 pt-3 border-t border-zinc-800/60 flex justify-end">
-          <div className="border-l border-red-900/30 pl-2">
-            <HoldToDeleteButton onDelete={async () => onDelete(template.id)} />
-          </div>
+      {/* Info — 2/3 width */}
+      <div className="flex-1 p-4 flex flex-col justify-between min-h-[120px]">
+        <div className="flex items-start justify-between gap-3">
+          <Link href={`/dashboard/templates/${template.id}`} className="text-sm font-medium text-white hover:text-zinc-300 transition-colors leading-snug">
+            {template.name}
+          </Link>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusStyles[template.status]}`}>
+            {statusLabel[template.status]}
+          </span>
         </div>
-      )}
+
+        {(template.status === "draft" || template.status === "archived") && (
+          <div className="flex justify-end">
+            <div className="border-l border-red-900/30 pl-2">
+              <HoldToDeleteButton onDelete={async () => onDelete(template.id)} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
