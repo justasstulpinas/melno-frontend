@@ -7,6 +7,7 @@ import { api, Template } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
 import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
+import { InlineTitle } from "@/components/InlineTitle";
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -118,6 +119,15 @@ export default function TemplatesPage() {
     }
   }
 
+  async function handleRename(id: number, name: string) {
+    setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, name } : t));
+    try {
+      await api.updateTemplate(id, { name });
+    } catch {
+      // silent — name still updated optimistically
+    }
+  }
+
   async function handleAddDirectly() {
     if (!uploadedFile) return;
     setAddingToTemplates(true);
@@ -216,7 +226,16 @@ export default function TemplatesPage() {
 
           {/* File info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate mb-1">{uploadedFile.name}</p>
+            <InlineTitle
+              value={uploadedFile.name.replace(/\.docx$/i, "")}
+              onSave={(name) => {
+                const newName = name + ".docx";
+                setUploadedFile((f) => f ? { ...f, name: newName } : f);
+                sessionStorage.setItem("docx_import_name", name);
+              }}
+              className="text-sm font-medium text-white mb-1"
+              inputClassName="text-sm font-medium"
+            />
             <div className="flex items-center gap-3 text-xs text-zinc-500">
               <span>{formatBytes(uploadedFile.size)}</span>
               <span>·</span>
@@ -270,15 +289,13 @@ export default function TemplatesPage() {
             onSort={(k) => toggleTSort(k as keyof Record<string, unknown>)}
           />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {(sortedTemplates as unknown as Template[]).map((t) => (
             <TemplateCard
               key={t.id}
               template={t}
-              onActivate={handleActivate}
-              onArchive={handleArchive}
               onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
+              onRename={(name) => handleRename(t.id, name)}
             />
           ))}
         </div>
@@ -288,76 +305,63 @@ export default function TemplatesPage() {
   );
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function TemplateCard({
   template,
-  onActivate,
-  onArchive,
   onDelete,
-  onDuplicate,
+  onRename,
 }: {
   template: Template;
-  onActivate: (id: number) => void;
-  onArchive: (id: number) => void;
   onDelete: (id: number) => void;
-  onDuplicate: (id: number) => void;
+  onRename: (name: string) => void;
 }) {
   const statusStyles: Record<string, string> = {
     draft: "bg-zinc-800 text-zinc-400",
     active: "bg-emerald-950 text-emerald-400",
     archived: "bg-zinc-800 text-zinc-500",
   };
+  const statusLabel: Record<string, string> = {
+    draft: "Juodraštis",
+    active: "Aktyvus",
+    archived: "Archyvuotas",
+  };
+
+  const preview = stripHtml(template.content).slice(0, 320);
 
   return (
-    <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 hover:border-zinc-700 transition-colors">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3">
-          <Link href={`/dashboard/templates/${template.id}`} className="text-sm font-medium text-white hover:text-zinc-300 transition-colors">
-            {template.name}
-          </Link>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusStyles[template.status]}`}>
-            {template.status === "draft" ? "Juodraštis" : template.status === "active" ? "Aktyvus" : "Archyvuotas"}
-          </span>
-        </div>
-        {template.description && (
-          <p className="text-xs text-zinc-500 mt-0.5 truncate max-w-md">{template.description}</p>
-        )}
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:border-zinc-700 transition-colors">
+      {/* Header row: name + status */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <InlineTitle
+          value={template.name}
+          onSave={onRename}
+          className="text-sm font-medium text-white"
+          inputClassName="text-sm font-medium"
+        />
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusStyles[template.status]}`}>
+          {statusLabel[template.status]}
+        </span>
       </div>
 
-      <div className="flex items-center gap-2 ml-4 shrink-0">
-        {template.status === "draft" && (
-          <button
-            onClick={() => onActivate(template.id)}
-            className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors px-2 py-1"
-          >
-            Aktyvuoti
-          </button>
-        )}
-        {template.status === "active" && (
-          <Link
-            href={`/dashboard/templates/${template.id}/link`}
-            className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1"
-          >
-            Dalintis
-          </Link>
-        )}
-        {(template.status === "draft" || template.status === "archived") && (
+      {/* Thumbnail */}
+      <Link href={`/dashboard/templates/${template.id}`} className="block">
+        <div className="relative bg-white/[0.03] border border-zinc-800 rounded-lg p-3 h-20 overflow-hidden hover:border-zinc-700 transition-colors">
+          <p className="text-[9px] leading-relaxed text-zinc-600 select-none">{preview || "—"}</p>
+          <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+        </div>
+      </Link>
+
+      {/* Danger zone */}
+      {(template.status === "draft" || template.status === "archived") && (
+        <div className="mt-3 pt-3 border-t border-zinc-800/60 flex justify-end">
           <div className="border-l border-red-900/30 pl-2">
             <HoldToDeleteButton onDelete={async () => onDelete(template.id)} />
           </div>
-        )}
-        <button
-          onClick={() => onDuplicate(template.id)}
-          className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1"
-        >
-          Kopijuoti
-        </button>
-        <Link
-          href={`/dashboard/templates/${template.id}`}
-          className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1"
-        >
-          Atidaryti →
-        </Link>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
