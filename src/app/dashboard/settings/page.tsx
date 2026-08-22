@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, Profile } from "@/lib/api";
 import { FloatingInput } from "@/components/FloatingInput";
+import { validatePhone } from "@/lib/validation";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -89,6 +90,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [modalTouched, setModalTouched] = useState<Record<string, boolean>>({});
   const [showSignPad, setShowSignPad] = useState(false);
   const [savingSig, setSavingSig] = useState(false);
   const [sigError, setSigError] = useState("");
@@ -123,17 +125,41 @@ export default function SettingsPage() {
       address: profile?.address ?? "",
       phone_number: profile?.phone_number ?? "",
     });
+    setModalTouched({});
+    setSaveError("");
     setShowEditModal(true);
   }
+
+  const phoneError = modalTouched.phone_number ? validatePhone(form.phone_number) : null;
+  const phoneSuccess = modalTouched.phone_number && !phoneError && form.phone_number.trim();
+
+  useEffect(() => {
+    if (showEditModal) {
+      const isEmpty = Object.values(form).every((v) => !v.trim());
+      if (!isEmpty) localStorage.setItem("settings_draft", JSON.stringify(form));
+    }
+  }, [form, showEditModal]);
+
+  useEffect(() => {
+    if (showEditModal) {
+      const saved = localStorage.getItem("settings_draft");
+      if (saved) {
+        try { setForm((prev) => ({ ...prev, ...JSON.parse(saved) })); } catch {}
+      }
+    }
+  }, [showEditModal]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (saving) return;
+    setModalTouched({ phone_number: true });
+    if (validatePhone(form.phone_number)) return;
     setSaveError("");
     setSaving(true);
     try {
       const updated = await api.updateProfile(form);
       setProfile(updated);
+      localStorage.removeItem("settings_draft");
       setSaved(true);
       setTimeout(() => { setSaved(false); setShowEditModal(false); }, 1000);
     } catch (err: unknown) {
@@ -252,7 +278,14 @@ export default function SettingsPage() {
               <FloatingInput label="Įmonės pavadinimas" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
               <div className="grid grid-cols-2 gap-3">
                 <FloatingInput label="Įmonės / IV kodas" value={form.company_code} onChange={(e) => setForm({ ...form, company_code: e.target.value })} />
-                <FloatingInput label="Telefonas" value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} />
+                <FloatingInput
+                  label="Telefonas"
+                  value={form.phone_number}
+                  onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+                  onBlur={() => setModalTouched((t) => ({ ...t, phone_number: true }))}
+                  errorMessage={phoneError ?? undefined}
+                  success={!!phoneSuccess}
+                />
               </div>
               <FloatingInput label="Adresas" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               {saveError && <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-4 py-2">{saveError}</p>}

@@ -6,14 +6,32 @@ import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
 import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
 import { FloatingInput } from "@/components/FloatingInput";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { validateEmail, validatePhone } from "@/lib/validation";
+
+const EMPTY_FORM = { name: "", email: "", phone: "", address: "" };
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const { form, setForm, clearDraft } = useDraftForm("contact_draft", EMPTY_FORM);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [createError, setCreateError] = useState("");
+
+  const fieldErrors = {
+    email: touched.email ? validateEmail(form.email) : null,
+    phone: touched.phone ? validatePhone(form.phone) : null,
+  };
+  const fieldSuccess = {
+    email: touched.email && !fieldErrors.email && form.email.trim(),
+    phone: touched.phone && !fieldErrors.phone && form.phone.trim(),
+  };
+
+  function blur(field: string) {
+    setTouched((t) => ({ ...t, [field]: true }));
+  }
 
   const { sorted: sortedContacts, sortKey: cSortKey, sortDir: cSortDir, toggleSort: toggleCSort } = useSortable(
     contacts as unknown as Record<string, unknown>[],
@@ -57,11 +75,16 @@ export default function ContactsPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    setTouched({ email: true, phone: true });
+    if (validateEmail(form.email) || validatePhone(form.phone)) return;
+    if (saving) return;
     setSaving(true);
+    setCreateError("");
     try {
       const contact = await api.createContact(form);
       setContacts((prev) => [...prev, contact]);
-      setForm({ name: "", email: "", phone: "", address: "" });
+      clearDraft();
+      setTouched({});
       setShowForm(false);
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : "Nepavyko išsaugoti kontakto");
@@ -89,10 +112,33 @@ export default function ContactsPage() {
         <form onSubmit={handleCreate} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6 flex flex-col gap-4">
           <h2 className="text-sm font-semibold text-white">Naujas kontaktas</h2>
           <div className="grid grid-cols-2 gap-4">
-            <FloatingInput label="Vardas" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <FloatingInput label="El. paštas" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            <FloatingInput label="Telefonas" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <FloatingInput label="Adresas" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            <FloatingInput
+              label="Vardas"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            <FloatingInput
+              label="El. paštas *"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onBlur={() => blur("email")}
+              errorMessage={fieldErrors.email ?? undefined}
+              success={!!fieldSuccess.email}
+            />
+            <FloatingInput
+              label="Telefonas"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onBlur={() => blur("phone")}
+              errorMessage={fieldErrors.phone ?? undefined}
+              success={!!fieldSuccess.phone}
+            />
+            <FloatingInput
+              label="Adresas"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+            />
           </div>
           {createError && <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-4 py-2">{createError}</p>}
           <div className="flex gap-3">

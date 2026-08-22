@@ -94,7 +94,7 @@ function ResetPasswordForm() {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 onBlur={() => setConfirmTouched(true)}
-                error={confirmMismatch}
+                errorMessage={confirmMismatch ? "Slaptažodžiai nesutampa" : undefined}
                 rightElement={
                   <button type="button" tabIndex={-1} onClick={() => setShowConfirm(!showConfirm)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
                     {showConfirm
@@ -104,7 +104,6 @@ function ResetPasswordForm() {
                   </button>
                 }
               />
-              {confirmMismatch && <p className={`${syne.className} text-xs text-red-400 mt-1`}>Slaptažodžiai nesutampa</p>}
             </div>
 
             {error && (

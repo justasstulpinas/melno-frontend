@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Syne } from "next/font/google";
 import { api } from "@/lib/api";
 import { FloatingInput } from "@/components/FloatingInput";
+import { validateEmail } from "@/lib/validation";
 
 const syne = Syne({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
@@ -13,10 +14,15 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const emailError = emailTouched ? validateEmail(email) : null;
+  const emailSuccess = emailTouched && !emailError && email.trim();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
+    setEmailTouched(true);
+    if (validateEmail(email)) return;
     setError("");
     setLoading(true);
     try {
@@ -62,6 +68,9 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailTouched(true)}
+                  errorMessage={emailError ?? undefined}
+                  success={!!emailSuccess}
                 />
 
                 {error && (
