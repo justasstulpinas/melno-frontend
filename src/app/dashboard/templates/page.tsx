@@ -344,27 +344,28 @@ function TemplateCard({
           <Link href={`/dashboard/templates/${template.id}`} className="text-sm font-medium text-white hover:text-zinc-300 transition-colors leading-snug">
             {template.name}
           </Link>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusStyles[template.status]}`}>
-            {statusLabel[template.status]}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {template.status === "active" && (
+              <Link
+                href={`/dashboard/templates/${template.id}/link`}
+                className="text-xs bg-white text-zinc-950 px-3 py-1.5 rounded-full font-medium hover:bg-zinc-200 transition-colors"
+              >
+                + Nauja nuoroda
+              </Link>
+            )}
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusStyles[template.status]}`}>
+              {statusLabel[template.status]}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between mt-2">
-          {template.status === "active" ? (
-            <Link
-              href={`/dashboard/templates/${template.id}/link`}
-              className="text-xs bg-white text-zinc-950 px-3 py-1.5 rounded-full font-medium hover:bg-zinc-200 transition-colors"
-            >
-              + Nauja nuoroda
-            </Link>
-          ) : <span />}
-
-          {(template.status === "draft" || template.status === "archived") && (
+        {(template.status === "draft" || template.status === "archived") && (
+          <div className="flex justify-end mt-2">
             <div className="border-l border-red-900/30 pl-2">
               <HoldToDeleteButton onDelete={async () => onDelete(template.id)} />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
