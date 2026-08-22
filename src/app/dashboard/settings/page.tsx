@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, Profile } from "@/lib/api";
+import { FloatingInput } from "@/components/FloatingInput";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -87,12 +88,16 @@ export default function SettingsPage() {
   const [form, setForm] = useState({ profile_name: "", company_name: "", company_code: "", address: "", phone_number: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [showSignPad, setShowSignPad] = useState(false);
   const [savingSig, setSavingSig] = useState(false);
+  const [sigError, setSigError] = useState("");
   const [deletingSig, setDeletingSig] = useState(false);
   const [savingLogo, setSavingLogo] = useState(false);
+  const [logoError, setLogoError] = useState("");
   const [deletingLogo, setDeletingLogo] = useState(false);
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -123,6 +128,8 @@ export default function SettingsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (saving) return;
+    setSaveError("");
     setSaving(true);
     try {
       const updated = await api.updateProfile(form);
@@ -130,7 +137,7 @@ export default function SettingsPage() {
       setSaved(true);
       setTimeout(() => { setSaved(false); setShowEditModal(false); }, 1000);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Nepavyko išsaugoti");
+      setSaveError(err instanceof Error ? err.message : "Nepavyko išsaugoti");
     } finally {
       setSaving(false);
     }
@@ -145,7 +152,7 @@ export default function SettingsPage() {
       const updated = await api.getProfile();
       setProfile(updated);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Nepavyko įkelti nuotraukos");
+      setAvatarError(err instanceof Error ? err.message : "Nepavyko įkelti nuotraukos");
     } finally {
       setSavingAvatar(false);
       e.target.value = "";
@@ -159,7 +166,7 @@ export default function SettingsPage() {
       const updated = await api.getProfile();
       setProfile(updated);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Nepavyko ištrinti");
+      setAvatarError(err instanceof Error ? err.message : "Nepavyko ištrinti");
     } finally {
       setSavingAvatar(false);
     }
@@ -176,7 +183,7 @@ export default function SettingsPage() {
         const updated = await api.saveUserLogo(base64);
         setProfile(updated);
       } catch (err: unknown) {
-        alert(err instanceof Error ? err.message : "Nepavyko įkelti logotipo");
+        setLogoError(err instanceof Error ? err.message : "Nepavyko įkelti logotipo");
       } finally {
         setSavingLogo(false);
       }
@@ -191,7 +198,7 @@ export default function SettingsPage() {
       const updated = await api.deleteUserLogo();
       setProfile(updated);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Nepavyko ištrinti logotipo");
+      setLogoError(err instanceof Error ? err.message : "Nepavyko ištrinti logotipo");
     } finally {
       setDeletingLogo(false);
     }
@@ -204,7 +211,7 @@ export default function SettingsPage() {
       setProfile(updated);
       setShowSignPad(false);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Nepavyko išsaugoti parašo");
+      setSigError(err instanceof Error ? err.message : "Nepavyko išsaugoti parašo");
     } finally {
       setSavingSig(false);
     }
@@ -216,7 +223,7 @@ export default function SettingsPage() {
       const updated = await api.deleteUserSignature();
       setProfile(updated);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Nepavyko ištrinti parašo");
+      setSigError(err instanceof Error ? err.message : "Nepavyko ištrinti parašo");
     } finally {
       setDeletingSig(false);
     }
@@ -241,30 +248,17 @@ export default function SettingsPage() {
               </button>
             </div>
             <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Rodomas vardas</label>
-                <input value={form.profile_name} onChange={(e) => setForm({ ...form, profile_name: e.target.value })} placeholder="Jūsų vardas" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-              </div>
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Įmonės pavadinimas</label>
-                <input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="MB Mano Įmonė" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-              </div>
+              <FloatingInput label="Rodomas vardas" value={form.profile_name} onChange={(e) => setForm({ ...form, profile_name: e.target.value })} />
+              <FloatingInput label="Įmonės pavadinimas" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-zinc-500 mb-1">Įmonės / IV kodas</label>
-                  <input value={form.company_code} onChange={(e) => setForm({ ...form, company_code: e.target.value })} placeholder="304512345" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-                </div>
-                <div>
-                  <label className="block text-xs text-zinc-500 mb-1">Telefonas</label>
-                  <input value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} placeholder="+370 600 00000" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-                </div>
+                <FloatingInput label="Įmonės / IV kodas" value={form.company_code} onChange={(e) => setForm({ ...form, company_code: e.target.value })} />
+                <FloatingInput label="Telefonas" value={form.phone_number} onChange={(e) => setForm({ ...form, phone_number: e.target.value })} />
               </div>
-              <div>
-                <label className="block text-xs text-zinc-500 mb-1">Adresas</label>
-                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Gedimino pr. 1, Vilnius" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-              </div>
+              <FloatingInput label="Adresas" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              {saveError && <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-4 py-2">{saveError}</p>}
               <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={saving} className="bg-white text-zinc-950 px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50">
+                <button type="submit" className="bg-white text-zinc-950 px-4 py-2 rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2">
+                  {saving && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
                   {saved ? "Išsaugota!" : saving ? "Išsaugoma…" : "Išsaugoti"}
                 </button>
                 <button type="button" onClick={() => setShowEditModal(false)} className="text-sm text-zinc-500 hover:text-white transition-colors px-2">
@@ -312,6 +306,7 @@ export default function SettingsPage() {
               Ištrinti
             </button>
           )}
+          {avatarError && <p className="text-[10px] text-red-400 text-center max-w-[80px]">{avatarError}</p>}
         </div>
 
         {/* Name + email */}
@@ -439,6 +434,8 @@ export default function SettingsPage() {
           </div>
         )}
         {savingSig && <p className="text-xs text-zinc-500 mt-3">Išsaugoma…</p>}
+        {sigError && <p className="text-xs text-red-400 mt-2">{sigError}</p>}
+        {logoError && <p className="text-xs text-red-400 mt-2">{logoError}</p>}
       </div>
     </div>
   );

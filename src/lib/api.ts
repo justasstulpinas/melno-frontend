@@ -116,7 +116,7 @@ export const api = {
     return res.json();
   },
 
-  // Links
+  // Links (legacy)
   createLink(data: { template_id: number; expires_in_hours: number; prefill?: Record<string, string> }) {
     return request<PublicLink>("/links", { method: "POST", body: JSON.stringify(data) });
   },
@@ -127,7 +127,79 @@ export const api = {
     return request<PublicLink>(`/links/${linkId}`, { method: "DELETE" });
   },
 
-  // Submissions
+  // Owner one-time download (JWT auth + 6-digit code + AES key from URL)
+  ownerDownloadSubmission(uuid: string, code: string, keyB64: string) {
+    const token = getToken();
+    return fetch(`${BASE_URL}/signing/download/owner/${uuid}?k=${encodeURIComponent(keyB64)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ code }),
+    });
+  },
+
+  // Secure signing flow
+  createSecureSubmission(data: {
+    template_id: number;
+    expires_in_hours: number;
+    prefill?: Record<string, string>;
+    recipient_email?: string;
+  }) {
+    return request<SecureSubmissionResult>("/signing/submissions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  listSecureSubmissions() {
+    return request<SecureSubmissionListItem[]>("/signing/submissions");
+  },
+  getSecureSubmissionMeta(uuid: string) {
+    // Public endpoint — no auth header needed
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}`).then(async (r) => {
+      if (!r.ok) throw new Error("Submission not found");
+      return r.json() as Promise<SecureSubmissionMeta>;
+    });
+  },
+  verifySigningCode(uuid: string, code: string) {
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}/verify-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ code }),
+    });
+  },
+  getSigningPreview(uuid: string) {
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}/preview`, {
+      credentials: "include",
+    }).then(async (r) => {
+      if (!r.ok) throw new Error("Preview not available");
+      return r.json() as Promise<SecureSubmissionPreview>;
+    });
+  },
+  markSigningViewed(uuid: string) {
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}/viewed`, {
+      method: "POST",
+      credentials: "include",
+    });
+  },
+  declineSigning(uuid: string) {
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}/decline`, {
+      method: "POST",
+      credentials: "include",
+    });
+  },
+  signSubmission(uuid: string, data: object) {
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}/sign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Legacy FilledContract submissions
   getAllSubmissions() {
     return request<SubmissionListItem[]>("/contracts/submissions");
   },
@@ -253,7 +325,6 @@ export type SubmissionListItem = {
   id: number;
   template_id: number;
   template_name: string;
-  submitted_data: Record<string, string>;
   status: "submitted" | "confirmed" | "completed" | "cancelled";
   submitted_at: string;
   confirmed_at: string | null;
@@ -264,18 +335,57 @@ export type Submission = {
   id: number;
   template_id: number;
   template_name: string;
-  template_version: number;
+  template_version: number | null;
   link_id: number;
-  submitted_data: Record<string, string>;
-  rendered_content: string;
   status: "submitted" | "confirmed" | "completed" | "cancelled";
   submitted_at: string;
   confirmed_at: string | null;
-  ip_address: string;
+  ip_address: string | null;
   user_agent: string | null;
   signature_image: string | null;
-  submission_hash: string;
+  submission_hash: string | null;
   submitter_email: string | null;
+};
+
+// Secure submission types (new eIDAS flow)
+export type SecureSubmissionResult = {
+  uuid: string;
+  access_code?: string;
+  expires_at: string;
+  email_sent: boolean;
+};
+
+export type SecureSubmissionMeta = {
+  uuid: string;
+  template_name: string;
+  description: string | null;
+  is_sensitive: boolean;
+  status: string;
+  expires_at: string;
+};
+
+export type SecureSubmissionPreview = {
+  uuid: string;
+  template_name: string;
+  content: string;
+  fields: string[];
+  is_sensitive: boolean;
+  logo_image: string | null;
+  logo_x: number;
+  logo_y: number;
+  logo_w: number;
+};
+
+export type SecureSubmissionListItem = {
+  uuid: string;
+  template_id: number;
+  template_name: string;
+  recipient_email: string | null;
+  status: string;
+  is_sensitive: boolean;
+  created_at: string;
+  expires_at: string;
+  signed_at: string | null;
 };
 
 export type PublicLink = {

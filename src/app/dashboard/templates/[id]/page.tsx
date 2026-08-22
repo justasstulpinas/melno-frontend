@@ -465,51 +465,10 @@ function SubmissionModal({ submission: s, onClose, onConfirm, onCancel, onComple
   onCancel: (id: number) => void;
   onComplete: (id: number) => void;
 }) {
-  const [html, setHtml] = useState<string | null>(null);
-  const [tab, setTab] = useState<"info" | "preview">("info");
   const [confirming, setConfirming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [completing, setCompleting] = useState(false);
-  const [savingContact, setSavingContact] = useState(false);
-  const [contactSaved, setContactSaved] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  function extractContact(data: Record<string, string>, email: string | null) {
-    const find = (...keys: string[]) =>
-      keys.map((k) => Object.entries(data).find(([key]) => key.toLowerCase().includes(k))?.[1]).find(Boolean) ?? null;
-    return {
-      name: find("name", "vardas", "pavadinimas"),
-      email: find("email", "pastas", "mail") ?? email,
-      phone: find("phone", "tel", "mob", "gsm"),
-      address: find("address", "adresas", "addr"),
-    };
-  }
-
-  async function handleSaveContact() {
-    const contact = extractContact(s.submitted_data, s.submitter_email ?? null);
-    if (!contact.name && !contact.email && !contact.phone && !contact.address) {
-      alert("Nerasta kontaktinės informacijos šioje sutartyje.");
-      return;
-    }
-    setSavingContact(true);
-    try {
-      await api.createContact({
-        name: contact.name ?? undefined,
-        email: contact.email ?? undefined,
-        phone: contact.phone ?? undefined,
-        address: contact.address ?? undefined,
-      });
-      setContactSaved(true);
-    } catch {
-      alert("Nepavyko išsaugoti kontakto.");
-    } finally {
-      setSavingContact(false);
-    }
-  }
-
-  useEffect(() => {
-    api.getSubmissionHtml(s.id).then(({ html }) => setHtml(html)).catch(() => {});
-  }, [s.id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -553,9 +512,6 @@ function SubmissionModal({ submission: s, onClose, onConfirm, onCancel, onComple
     submitted: "Pateiktas", confirmed: "Patvirtintas", completed: "Baigtas", cancelled: "Atšauktas",
   };
 
-  const dataEntries = Object.entries(s.submitted_data).filter(([k]) => k !== "signature" && !k.startsWith("sys_"));
-  const tabClass = (t: "info" | "preview") =>
-    `px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === t ? "bg-zinc-700 text-white" : "text-zinc-400 hover:text-white"}`;
 
   return (
     <div ref={overlayRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
@@ -603,63 +559,27 @@ function SubmissionModal({ submission: s, onClose, onConfirm, onCancel, onComple
           </div>
         </div>
 
-        <div className="flex gap-1 px-6 pt-3 shrink-0">
-          <button className={tabClass("info")} onClick={() => setTab("info")}>Kliento duomenys</button>
-          <button className={tabClass("preview")} onClick={() => setTab("preview")}>Sutarties peržiūra</button>
-        </div>
-
         <div className="flex-1 overflow-auto px-6 pb-6 pt-4">
-          {tab === "info" ? (
-            <div className="flex flex-col gap-6">
-              {dataEntries.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-3">Užpildyti laukai</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {dataEntries.map(([k, v]) => (
-                      <div key={k} className="bg-zinc-800/60 rounded-lg px-3 py-2.5">
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">{k.replace(/_/g, " ")}</p>
-                        <p className="text-sm text-white break-words">{v || "—"}</p>
-                      </div>
-                    ))}
-                  </div>
+          <div className="flex flex-col gap-4">
+            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3">
+              <p className="text-xs text-zinc-400">
+                Kliento duomenys ir dokumento turinys nebesaugomi dėl GDPR reikalavimų.
+                Naujos sutartys pristatomos per saugų atsisiuntimo srautą el. paštu.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-zinc-800/60 rounded-lg px-3 py-2.5">
+                <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Pateikta</p>
+                <p className="text-sm text-white">{fmtDate(s.submitted_at)}</p>
+              </div>
+              {s.confirmed_at && (
+                <div className="bg-zinc-800/60 rounded-lg px-3 py-2.5">
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Patvirtinta</p>
+                  <p className="text-sm text-white">{fmtDate(s.confirmed_at)}</p>
                 </div>
               )}
-              {s.signature_image && (
-                <div>
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-3">Parašas</p>
-                  <div className="bg-white rounded-lg p-4 inline-block">
-                    <img src={`data:image/png;base64,${s.signature_image}`} alt="Parašas" className="max-w-[280px] h-auto" />
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-2 flex-wrap">
-                <DownloadBtn submissionId={s.id} format="pdf" label="Atsisiųsti PDF" />
-                <DownloadBtn submissionId={s.id} format="docx" label="Atsisiųsti DOCX" />
-                <button
-                  onClick={handleSaveContact}
-                  disabled={savingContact || contactSaved}
-                  className="text-xs text-zinc-400 hover:text-emerald-400 border border-zinc-700 hover:border-emerald-800 px-3 py-2 rounded-md transition-colors disabled:opacity-50"
-                >
-                  {contactSaved ? "✓ Kontaktas išsaugotas" : savingContact ? "Išsaugoma…" : "+ Išsaugoti kaip kontaktą"}
-                </button>
-              </div>
             </div>
-          ) : (
-            <div className="bg-[#c8c8c8] rounded-xl py-8 px-6">
-              <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.3)]" style={{ maxWidth: 794 }}>
-                {html ? (
-                  <iframe srcDoc={html} className="w-full border-0 rounded" style={{ minHeight: 900 }}
-                    onLoad={(e) => {
-                      const iframe = e.currentTarget;
-                      const body = iframe.contentDocument?.body;
-                      if (body) iframe.style.height = body.scrollHeight + 40 + "px";
-                    }} />
-                ) : (
-                  <p className="p-8 text-sm text-zinc-500">Kraunama…</p>
-                )}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,7 +27,7 @@ export default function TemplatesPage() {
       sessionStorage.setItem("docx_import_name", file.name.replace(/\.docx$/i, ""));
       router.push("/dashboard/templates/new");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Įkėlimas nepavyko");
+      setActionError(err instanceof Error ? err.message : "Įkėlimas nepavyko");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -45,7 +46,7 @@ export default function TemplatesPage() {
       const updated = await api.activateTemplate(id);
       setTemplates((prev) => prev.map((t) => (t.id === id ? updated : t)));
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
+      setActionError(e instanceof Error ? e.message : "Nepavyko atlikti veiksmo");
     }
   }
 
@@ -54,7 +55,7 @@ export default function TemplatesPage() {
       const updated = await api.archiveTemplate(id);
       setTemplates((prev) => prev.map((t) => (t.id === id ? updated : t)));
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
+      setActionError(e instanceof Error ? e.message : "Nepavyko atlikti veiksmo");
     }
   }
 
@@ -68,7 +69,7 @@ export default function TemplatesPage() {
       const copy = await api.duplicateTemplate(id);
       router.push(`/dashboard/templates/${copy.id}/edit`);
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
+      setActionError(e instanceof Error ? e.message : "Nepavyko atlikti veiksmo");
     }
   }
 
@@ -93,16 +94,17 @@ export default function TemplatesPage() {
           <p className="text-sm text-zinc-400">Tvarkykite savo sutarčių šablonus.</p>
         </div>
         <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
+          onClick={() => { setActionError(""); fileInputRef.current?.click(); }}
+          className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2"
         >
+          {uploading && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
           {uploading ? "Konvertuojama…" : "+ Įkelti .docx šabloną"}
         </button>
       </div>
 
       {loading && <p className="text-sm text-zinc-500">Kraunama…</p>}
       {error && <p className="text-sm text-red-400">{error}</p>}
+      {actionError && <p className="text-sm text-red-400 bg-red-950/30 border border-red-900/40 rounded-full px-4 py-2 mb-2">{actionError}</p>}
 
       {!loading && templates.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 border border-dashed border-zinc-800 rounded-xl">

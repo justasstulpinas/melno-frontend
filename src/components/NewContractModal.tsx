@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { api, Template, PublicLink, Profile } from "@/lib/api";
+import { api, Template, SecureSubmissionResult, Profile } from "@/lib/api";
 import { ContactEmailPicker } from "@/components/ContactEmailPicker";
 
 const PROFILE_MAP: Record<string, keyof Profile> = {
@@ -55,7 +55,8 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
   const [prefill, setPrefill] = useState<Record<string, string>>({});
   const [expiresInHours, setExpiresInHours] = useState(72);
   const [loading, setLoading] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<PublicLink | null>(null);
+  const [generatedLink, setGeneratedLink] = useState<SecureSubmissionResult | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [copied, setCopied] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
 
@@ -96,10 +97,11 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
       for (const [k, v] of Object.entries(prefill)) {
         formatted[k] = isDateField(k) && v ? formatDate(v) : v;
       }
-      const link = await api.createLink({
+      const link = await api.createSecureSubmission({
         template_id: selected.id,
         expires_in_hours: expiresInHours,
         prefill: formatted,
+        recipient_email: recipientEmail || undefined,
       });
       setGeneratedLink(link);
       setStep("done");
@@ -111,7 +113,7 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
   }
 
   const publicUrl = generatedLink && typeof window !== "undefined"
-    ? `${window.location.origin}/sign/${generatedLink.token}`
+    ? `${window.location.origin}/sign/${generatedLink.uuid}`
     : "";
 
   function copyLink() {
@@ -256,6 +258,34 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
                   {copied ? "✓" : "Kopijuoti"}
                 </button>
               </div>
+              {generatedLink && !generatedLink.email_sent && generatedLink.access_code && (
+                <div>
+                  <p className="text-xs text-zinc-400 mb-2">Patvirtinimo kodas — siųskite klientui atskirai</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-4 py-2.5 text-xl font-mono text-white tracking-widest text-center select-all">
+                      {generatedLink.access_code}
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedLink.access_code!);
+                        setCodeCopied(true);
+                        setTimeout(() => setCodeCopied(false), 2000);
+                      }}
+                      className="shrink-0 bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:text-white px-3 py-2 rounded-md transition-colors"
+                    >
+                      {codeCopied ? "✓" : "Kopijuoti"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-zinc-600 mt-1.5">Klientas įves šį kodą prieš peržiūrėdamas sutartį.</p>
+                </div>
+              )}
+
+              {generatedLink?.email_sent && (
+                <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-lg px-4 py-3">
+                  <p className="text-sm text-emerald-400">El. laiškas išsiųstas klientui automatiškai.</p>
+                </div>
+              )}
+
               {generatedLink && (
                 <p className="text-xs text-zinc-600">
                   Galioja iki:{" "}
@@ -264,35 +294,6 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
                   })}
                 </p>
               )}
-
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-zinc-800" />
-                <span className="text-xs text-zinc-600">arba</span>
-                <div className="flex-1 h-px bg-zinc-800" />
-              </div>
-
-              <p className="text-xs text-zinc-400">Siųsti tiesiogiai el. paštu</p>
-              <div className="flex items-center gap-2">
-                <ContactEmailPicker value={recipientEmail} onChange={setRecipientEmail} />
-                <a
-                  href={recipientEmail && generatedLink ? (() => {
-                    const subject = encodeURIComponent(`Sutartis pasirašymui: ${selected?.name}`);
-                    const body = encodeURIComponent(
-                      `Sveiki,\n\nSiunčiu jums sutartį pasirašymui.\n\nPaspauskite žemiau esančią nuorodą, peržiūrėkite sutartį ir užpildykite reikiamus laukus:\n\n${publicUrl}\n\nNuoroda galios iki: ${new Date(generatedLink.expires_at).toLocaleString("lt-LT", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}\n\nJei turite klausimų, susisiekite su mumis.\n\nPagarbiai`
-                    );
-                    return `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
-                  })() : "#"}
-                  onClick={(e) => { if (!recipientEmail) e.preventDefault(); }}
-                  className={`shrink-0 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-                    recipientEmail
-                      ? "bg-white text-zinc-950 hover:bg-zinc-200"
-                      : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                  }`}
-                >
-                  Siųsti →
-                </a>
-              </div>
             </div>
           )}
         </div>

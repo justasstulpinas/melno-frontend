@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { api, Template, PublicLink, Profile } from "@/lib/api";
+import { api, Template, SecureSubmissionResult, Profile } from "@/lib/api";
 import { ContactEmailPicker } from "@/components/ContactEmailPicker";
 
 const PROFILE_MAP: Record<string, keyof Profile> = {
@@ -65,10 +65,11 @@ export default function ShareLinkPage() {
   const [ownerFields, setOwnerFields] = useState<string[]>([]);
   const [prefill, setPrefill] = useState<Record<string, string>>({});
   const [expiresInHours, setExpiresInHours] = useState(72);
-  const [generatedLink, setGeneratedLink] = useState<PublicLink | null>(null);
+  const [result, setResult] = useState<SecureSubmissionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
 
   useEffect(() => {
@@ -96,22 +97,17 @@ export default function ShareLinkPage() {
       for (const [k, v] of Object.entries(prefill)) {
         formatted[k] = isDateField(k) && v ? formatDate(v) : v;
       }
-      const link = await api.createLink({ template_id: id, expires_in_hours: expiresInHours, prefill: formatted });
-      setGeneratedLink(link);
+      const res = await api.createSecureSubmission({
+        template_id: id,
+        expires_in_hours: expiresInHours,
+        prefill: formatted,
+        recipient_email: recipientEmail || undefined,
+      });
+      setResult(res);
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Failed to generate link");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleRevoke(linkId: number) {
-    if (!confirm("Panaikinti šią nuorodą?")) return;
-    try {
-      await api.revokeLink(linkId);
-      setGeneratedLink(null);
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
     }
   }
 
@@ -121,14 +117,20 @@ export default function ShareLinkPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function handleCopyCode(code: string) {
+    navigator.clipboard.writeText(code);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }
+
   function setDateWithDuration(field: string, startField: string, days: number) {
     const startVal = prefill[startField];
     if (!startVal) { alert("Pirmiausia nustatykite pradžios datą."); return; }
     setPrefill((prev) => ({ ...prev, [field]: addDays(startVal, days) }));
   }
 
-  const publicUrl = generatedLink
-    ? `${window?.location?.origin}/sign/${generatedLink.token}`
+  const publicUrl = result
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/sign/${result.uuid}`
     : null;
 
   const nonDateFields = ownerFields.filter((f) => !isDateField(f));
@@ -149,7 +151,7 @@ export default function ShareLinkPage() {
       <h1 className="text-2xl font-semibold text-white mb-1">Dalintis nuoroda</h1>
       <p className="text-sm text-zinc-400 mb-8">Sugeneruokite nuorodą, kurią klientas gali naudoti sutarčiai užpildyti ir pasirašyti.</p>
 
-      {!generatedLink ? (
+      {!result ? (
         <div className="flex flex-col gap-5">
           {nonDateFields.length > 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
@@ -202,6 +204,7 @@ export default function ShareLinkPage() {
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
             <h2 className="text-sm font-semibold text-white">Nuorodos nustatymai</h2>
+
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5">Nuoroda galioja</label>
               <select
@@ -209,14 +212,30 @@ export default function ShareLinkPage() {
                 onChange={(e) => setExpiresInHours(Number(e.target.value))}
                 className="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600"
               >
-                <option value={24}>24 hours</option>
-                <option value={48}>48 hours</option>
-                <option value={72}>72 hours</option>
-                <option value={168}>7 days</option>
-                <option value={720}>30 days</option>
+                <option value={24}>24 val.</option>
+                <option value={48}>48 val.</option>
+                <option value={72}>72 val.</option>
+                <option value={168}>7 dienos</option>
+                <option value={720}>30 dienų</option>
               </select>
             </div>
-            <button onClick={handleGenerate} disabled={loading} className="bg-white text-zinc-950 px-5 py-2.5 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 w-fit">
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Siųsti klientui el. paštu <span className="text-zinc-600">(neprivaloma)</span>
+              </label>
+              <ContactEmailPicker value={recipientEmail} onChange={setRecipientEmail} />
+              <p className="text-xs text-zinc-600 mt-1.5">
+                Jei nurodysite el. paštą — sistema automatiškai išsiųs nuorodą ir kodą klientui.
+                Jei ne — kodą gausite čia ir siųsite patys.
+              </p>
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="bg-white text-zinc-950 px-5 py-2.5 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50 w-fit"
+            >
               {loading ? "Generuojama…" : "Generuoti nuorodą"}
             </button>
           </div>
@@ -231,47 +250,64 @@ export default function ShareLinkPage() {
           )}
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
-          <div>
-            <p className="text-xs text-zinc-500 mb-2">Dalinkitės šia nuoroda su klientu</p>
-            <div className="flex items-center gap-2">
-              <input readOnly value={publicUrl ?? ""} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-300 font-mono focus:outline-none" />
-              <button onClick={() => handleCopy(publicUrl!)} className="shrink-0 bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:text-white px-3 py-2 rounded-md transition-colors">
-                {copied ? "Nukopijuota!" : "Kopijuoti"}
-              </button>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col gap-5">
+
+          {result.email_sent ? (
+            /* Email was sent automatically */
+            <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-lg px-4 py-3">
+              <p className="text-sm text-emerald-400 font-medium mb-0.5">El. laiškas išsiųstas</p>
+              <p className="text-xs text-emerald-500/80">
+                Nuoroda ir patvirtinimo kodas išsiųsti adresu <strong>{recipientEmail}</strong>.
+              </p>
             </div>
-          </div>
+          ) : (
+            /* Manual sharing — show URL + code */
+            <>
+              <div>
+                <p className="text-xs text-zinc-500 mb-2">Nuoroda klientui</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={publicUrl ?? ""}
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-300 font-mono focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleCopy(publicUrl!)}
+                    className="shrink-0 bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:text-white px-3 py-2 rounded-md transition-colors"
+                  >
+                    {copied ? "Nukopijuota!" : "Kopijuoti"}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-zinc-500 mb-2">Patvirtinimo kodas — siųskite klientui atskirai</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-4 py-2.5 text-xl font-mono text-white tracking-widest text-center select-all">
+                    {result.access_code}
+                  </div>
+                  <button
+                    onClick={() => handleCopyCode(result.access_code!)}
+                    className="shrink-0 bg-zinc-800 border border-zinc-700 text-sm text-zinc-300 hover:text-white px-3 py-2 rounded-md transition-colors"
+                  >
+                    {codeCopied ? "Nukopijuota!" : "Kopijuoti"}
+                  </button>
+                </div>
+                <p className="text-xs text-zinc-600 mt-1.5">Klientas įves šį kodą prieš peržiūrėdamas sutartį.</p>
+              </div>
+            </>
+          )}
+
           <div className="text-xs text-zinc-500">
             Galioja iki:{" "}
-            {new Date(generatedLink.expires_at.endsWith("Z") ? generatedLink.expires_at : generatedLink.expires_at + "Z").toLocaleString("lt-LT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+            {new Date(result.expires_at.endsWith("Z") ? result.expires_at : result.expires_at + "Z").toLocaleString("lt-LT", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
           </div>
 
-          <div className="flex items-center gap-3 my-1">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-xs text-zinc-600">arba</span>
-            <div className="flex-1 h-px bg-zinc-800" />
-          </div>
-
-          <div>
-            <p className="text-xs text-zinc-400 mb-2">Siųsti tiesiogiai el. paštu</p>
-            <div className="flex items-center gap-2">
-              <ContactEmailPicker value={recipientEmail} onChange={setRecipientEmail} />
-              <a
-                href={recipientEmail ? (() => {
-                  const subject = encodeURIComponent(`Sutartis pasirašymui: ${template?.name}`);
-                  const body = encodeURIComponent(`Sveiki,\n\nSiunčiu jums sutartį pasirašymui.\n\nPaspauskite žemiau esančią nuorodą, peržiūrėkite sutartį ir užpildykite reikiamus laukus:\n\n${publicUrl}\n\nPagarbiai`);
-                  return `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
-                })() : "#"}
-                onClick={(e) => { if (!recipientEmail) e.preventDefault(); }}
-                className={`shrink-0 text-sm font-medium px-3 py-2 rounded-md transition-colors ${recipientEmail ? "bg-white text-zinc-950 hover:bg-zinc-200" : "bg-zinc-800 text-zinc-600 cursor-not-allowed"}`}
-              >
-                Siųsti →
-              </a>
-            </div>
-          </div>
-
-          <button onClick={() => handleRevoke(generatedLink.id)} className="text-xs text-red-400 hover:text-red-300 transition-colors w-fit">
-            Panaikinti šią nuorodą
+          <button
+            onClick={() => setResult(null)}
+            className="text-xs text-zinc-500 hover:text-white transition-colors w-fit"
+          >
+            ← Sukurti naują nuorodą
           </button>
         </div>
       )}

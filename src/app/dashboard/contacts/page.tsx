@@ -5,6 +5,7 @@ import { api, Contact } from "@/lib/api";
 import { useSortable } from "@/hooks/useSortable";
 import { SortBar } from "@/components/SortableHeader";
 import { HoldToDeleteButton } from "@/components/HoldToDeleteButton";
+import { FloatingInput } from "@/components/FloatingInput";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -12,6 +13,7 @@ export default function ContactsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
   const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState("");
 
   const { sorted: sortedContacts, sortKey: cSortKey, sortDir: cSortDir, toggleSort: toggleCSort } = useSortable(
     contacts as unknown as Record<string, unknown>[],
@@ -62,7 +64,7 @@ export default function ContactsPage() {
       setForm({ name: "", email: "", phone: "", address: "" });
       setShowForm(false);
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Failed");
+      setCreateError(e instanceof Error ? e.message : "Nepavyko išsaugoti kontakto");
     } finally {
       setSaving(false);
     }
@@ -77,7 +79,7 @@ export default function ContactsPage() {
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-md font-medium hover:bg-zinc-200 transition-colors"
+          className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors"
         >
           + Pridėti kontaktą
         </button>
@@ -87,25 +89,15 @@ export default function ContactsPage() {
         <form onSubmit={handleCreate} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6 flex flex-col gap-4">
           <h2 className="text-sm font-semibold text-white">Naujas kontaktas</h2>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1.5">Vardas</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Jane Doe" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-            </div>
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1.5">El. paštas</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="jane@example.com" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-            </div>
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1.5">Telefonas</label>
-              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+370 600 00000" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-            </div>
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1.5">Adresas</label>
-              <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="pvz. Gedimino pr. 1, Vilnius" className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-            </div>
+            <FloatingInput label="Vardas" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <FloatingInput label="El. paštas" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <FloatingInput label="Telefonas" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <FloatingInput label="Adresas" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
+          {createError && <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-4 py-2">{createError}</p>}
           <div className="flex gap-3">
-            <button type="submit" disabled={saving} className="bg-white text-zinc-950 px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50">
+            <button type="submit" className="bg-white text-zinc-950 px-4 py-2 rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2">
+              {saving && <svg className="animate-spin w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
               {saving ? "Išsaugoma…" : "Išsaugoti kontaktą"}
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="text-sm text-zinc-500 hover:text-white transition-colors">
