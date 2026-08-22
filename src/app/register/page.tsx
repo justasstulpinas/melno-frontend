@@ -153,14 +153,14 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <p className={`${syne.className} text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-md px-3 py-2`}>
+              <p className={`${syne.className} text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-3 py-2`}>
                 {error}
               </p>
             )}
 
             <button
               type="submit"
-              className="w-full bg-white text-zinc-950 rounded-md py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+              className="w-full bg-white text-zinc-950 rounded-full py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
             >
               {loading && <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
               {loading ? "Kuriama paskyra…" : "Sukurti paskyrą"}

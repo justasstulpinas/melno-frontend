@@ -26,7 +26,7 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
           placeholder=" "
           onFocus={(e) => { setFocused(true); onFocus?.(e); }}
           onBlur={(e) => { setFocused(false); onBlur?.(e); }}
-          className={`peer w-full bg-zinc-900 border ${borderClass} rounded-md px-3 pt-5 pb-2 ${rightElement ? "pr-10" : ""} text-sm text-white placeholder-transparent focus:outline-none focus:ring-1 transition-colors ${className ?? ""}`}
+          className={`peer w-full bg-zinc-900 border ${borderClass} rounded-full px-3 pt-5 pb-2 ${rightElement ? "pr-10" : ""} text-sm text-white placeholder-transparent focus:outline-none focus:ring-1 transition-colors ${className ?? ""}`}
           {...props}
         />
         <label
