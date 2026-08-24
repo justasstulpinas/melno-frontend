@@ -5,8 +5,77 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
+// ── Context menu ─────────────────────────────────────────────────
+type ContextMenuState = { x: number; y: number; text: string } | null;
+
+function PlaceholderContextMenu({
+  menu,
+  onSelect,
+  onClose,
+}: {
+  menu: ContextMenuState;
+  onSelect: (placeholder: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    function handleClick(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); }
+    document.addEventListener("keydown", handleKey);
+    document.addEventListener("mousedown", handleClick);
+    return () => { document.removeEventListener("keydown", handleKey); document.removeEventListener("mousedown", handleClick); };
+  }, [onClose]);
+
+  if (!menu) return null;
+
+  // Flip near right/bottom edge
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const menuW = 240;
+  const menuH = 380;
+  const x = menu.x + menuW > vw ? menu.x - menuW : menu.x;
+  const y = menu.y + menuH > vh ? menu.y - menuH : menu.y;
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl py-1.5 overflow-y-auto"
+      style={{ top: y, left: x, width: menuW, maxHeight: menuH }}
+    >
+      <p className="px-3 py-1.5 text-[10px] text-zinc-500 font-medium uppercase tracking-wide border-b border-zinc-800 mb-1">
+        Pakeisti: <span className="text-zinc-300 normal-case tracking-normal font-normal">"{menu.text.slice(0, 30)}{menu.text.length > 30 ? "…" : ""}"</span>
+      </p>
+      {PLACEHOLDER_GROUPS.map((group, gi) => (
+        <div key={group.label}>
+          {gi > 0 && <div className="h-px bg-zinc-800 mx-2 my-1" />}
+          <p className="px-3 pt-1 pb-0.5 text-[9px] text-zinc-600 uppercase tracking-wide">{group.label}</p>
+          {group.items.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => { onSelect(item.key); onClose(); }}
+              className="w-full text-left px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors flex items-center justify-between gap-3"
+            >
+              <span>{item.label}</span>
+              <span className="text-zinc-600 font-mono text-[9px] shrink-0">{`{{${item.key}}}`}</span>
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Docx preview wrapper (client-only) ──────────────────────────
-function DocxViewer({ buffer, onSelectionChange }: { buffer: ArrayBuffer; onSelectionChange: (text: string) => void }) {
+function DocxViewer({
+  buffer,
+  onSelectionChange,
+  onContextMenu,
+}: {
+  buffer: ArrayBuffer;
+  onSelectionChange: (text: string) => void;
+  onContextMenu: (x: number, y: number, text: string) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,9 +102,16 @@ function DocxViewer({ buffer, onSelectionChange }: { buffer: ArrayBuffer; onSele
     return () => document.removeEventListener("mouseup", handleMouseUp);
   }, [onSelectionChange]);
 
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    const sel = window.getSelection()?.toString().trim() ?? "";
+    if (sel) onContextMenu(e.clientX, e.clientY, sel);
+  }
+
   return (
     <div
       ref={containerRef}
+      onContextMenu={handleContextMenu}
       className="docx-preview bg-white rounded-lg shadow-lg overflow-auto"
       style={{ minHeight: "800px" }}
     />
@@ -105,6 +181,7 @@ export default function NewTemplatePage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [replacing, setReplacing] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -131,12 +208,13 @@ export default function NewTemplatePage() {
     }
   }
 
-  async function handleReplaceText(placeholder: string) {
-    if (!selectedText || !fileKey) return;
+  async function handleReplaceText(placeholder: string, textOverride?: string) {
+    const text = textOverride ?? selectedText;
+    if (!text || !fileKey) return;
     setReplacing(placeholder);
     setError("");
     try {
-      const { placeholders: ph } = await api.replaceText(fileKey, selectedText, placeholder);
+      const { placeholders: ph } = await api.replaceText(fileKey, text, placeholder);
       setPlaceholders(ph);
       setSelectedText("");
       const buf = await api.getTmpDocx(fileKey);
@@ -237,14 +315,10 @@ export default function NewTemplatePage() {
 
       {/* Helper bar */}
       <div className="px-6 py-2 border-b border-zinc-800/50 bg-zinc-950 flex items-center gap-3 text-xs text-zinc-500">
-        {selectedText ? (
-          <>
-            <span className="text-emerald-400">Pasirinkta:</span>
-            <span className="text-zinc-300 max-w-xs truncate">"{selectedText}"</span>
-            <span>→ spustelkite kintamąjį dešinėje norėdami pakeisti</span>
-          </>
+        {replacing ? (
+          <span className="text-zinc-400 flex items-center gap-2"><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Keičiama…</span>
         ) : (
-          <span>Pažymėkite tekstą dokumente ir spustelkite kintamąjį dešinėje, kad jį pakeistumėte</span>
+          <span>Pažymėkite tekstą ir dešiniuoju pelės mygtuku pasirinkite kintamąjį</span>
         )}
       </div>
 
@@ -252,7 +326,13 @@ export default function NewTemplatePage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Document preview */}
         <div className="flex-1 overflow-auto p-6 bg-zinc-950">
-          {docxBuffer && <DocxViewer buffer={docxBuffer} onSelectionChange={handleSelection} />}
+          {docxBuffer && (
+            <DocxViewer
+              buffer={docxBuffer}
+              onSelectionChange={handleSelection}
+              onContextMenu={(x, y, text) => setContextMenu({ x, y, text })}
+            />
+          )}
         </div>
 
         {/* Sidebar */}
@@ -291,6 +371,14 @@ export default function NewTemplatePage() {
           ))}
         </div>
       </div>
+
+      <PlaceholderContextMenu
+        menu={contextMenu}
+        onSelect={(placeholder) => {
+          if (contextMenu) handleReplaceText(placeholder, contextMenu.text);
+        }}
+        onClose={() => setContextMenu(null)}
+      />
     </div>
   );
 }
