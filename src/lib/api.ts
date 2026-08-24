@@ -335,13 +335,9 @@ export type Submission = {
   id: number;
   template_id: number;
   template_name: string;
-  template_version: number | null;
-  link_id: number;
   status: "submitted" | "confirmed" | "completed" | "cancelled";
   submitted_at: string;
   confirmed_at: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
   signature_image: string | null;
   submission_hash: string | null;
   submitter_email: string | null;
