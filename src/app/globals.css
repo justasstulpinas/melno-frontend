@@ -53,6 +53,12 @@ p { text-wrap: pretty; }
 .hero-item:nth-child(4) { animation-delay: 340ms; }
 .hero-item:nth-child(5) { animation-delay: 430ms; }
 
+/* docx-preview styles */
+.docx-preview { width: 100%; }
+.docx-preview .docx { font-family: inherit; }
+.docx-preview section.docx { background: white; box-shadow: 0 2px 12px rgba(0,0,0,0.15); margin-bottom: 24px; }
+::highlight(selection) { background: #3b82f6; color: white; }
+
 /* TipTap editor content styles — match PDF renderer exactly */
 .tiptap { color: #18181b; font-family: 'Times New Roman', Times, serif; font-size: 16px; line-height: 1.6; }
 .tiptap h1 { font-size: 1.75rem; font-weight: 700; margin: 1rem 0 0.5rem; line-height: 1.3; }

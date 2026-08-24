@@ -78,7 +78,7 @@ export const api = {
   getTemplate(id: number) {
     return request<Template>(`/templates/${id}`);
   },
-  createTemplate(data: { name: string; description?: string; content: string }) {
+  createTemplate(data: { name: string; description?: string; content?: string; file_key?: string }) {
     return request<Template>("/templates", { method: "POST", body: JSON.stringify(data) });
   },
   updateTemplate(id: number, data: Partial<{ name: string; description: string; content: string; logo_x: number; logo_y: number; logo_w: number; client_sig_x: number | null; client_sig_y: number | null; user_sig_x: number | null; user_sig_y: number | null }>) {
@@ -99,7 +99,7 @@ export const api = {
   getSubmissions(templateId: number) {
     return request<Submission[]>(`/templates/${templateId}/submissions`);
   },
-  async uploadDocx(file: File): Promise<{ html: string }> {
+  async uploadDocx(file: File): Promise<{ file_key: string; placeholders: string[]; filename: string }> {
     const token = getToken();
     const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
     const formData = new FormData();
@@ -114,6 +114,33 @@ export const api = {
       throw new Error(body.detail ?? "Įkėlimas nepavyko");
     }
     return res.json();
+  },
+
+  async replaceText(file_key: string, find_text: string, placeholder: string): Promise<{ placeholders: string[] }> {
+    return request("/templates/replace-text", {
+      method: "POST",
+      body: JSON.stringify({ file_key, find_text, placeholder }),
+    });
+  },
+
+  async getTmpDocx(fileKey: string): Promise<ArrayBuffer> {
+    const token = getToken();
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    const res = await fetch(`${BASE_URL}/templates/tmp/${fileKey}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Nepavyko gauti failo");
+    return res.arrayBuffer();
+  },
+
+  async getTemplateDocx(templateId: number): Promise<ArrayBuffer> {
+    const token = getToken();
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    const res = await fetch(`${BASE_URL}/templates/${templateId}/docx`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Nepavyko gauti failo");
+    return res.arrayBuffer();
   },
 
   // Links (legacy)

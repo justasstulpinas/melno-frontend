@@ -16,7 +16,7 @@ export default function TemplatesPage() {
   const [actionError, setActionError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; uploadedAt: Date; html: string } | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; uploadedAt: Date; file_key: string } | null>(null);
   const [addingToTemplates, setAddingToTemplates] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
@@ -36,10 +36,10 @@ export default function TemplatesPage() {
     setUploadedFile(null);
     setUploading(true);
     try {
-      const { html } = await api.uploadDocx(file);
-      sessionStorage.setItem("docx_import_html", html);
-      sessionStorage.setItem("docx_import_name", file.name.replace(/\.docx$/i, ""));
-      setUploadedFile({ name: file.name, size: file.size, uploadedAt: new Date(), html });
+      const { file_key, filename } = await api.uploadDocx(file);
+      sessionStorage.setItem("docx_file_key", file_key);
+      sessionStorage.setItem("docx_import_name", filename);
+      setUploadedFile({ name: file.name, size: file.size, uploadedAt: new Date(), file_key });
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Įkėlimas nepavyko");
     } finally {
@@ -124,7 +124,7 @@ export default function TemplatesPage() {
     try {
       const template = await api.createTemplate({
         name: uploadedFile.name.replace(/\.docx$/i, ""),
-        content: uploadedFile.html,
+        file_key: uploadedFile.file_key,
       });
       setUploadedFile(null);
       setTemplates((prev) => [...prev, template]);
@@ -235,7 +235,7 @@ export default function TemplatesPage() {
           {/* Actions */}
           <div className="flex flex-col gap-2 shrink-0">
             <button
-              onClick={() => router.push("/dashboard/templates/new")}
+              onClick={() => { if (uploadedFile) { sessionStorage.setItem("docx_file_key", uploadedFile.file_key); } router.push("/dashboard/templates/new"); }}
               className="text-sm bg-white text-zinc-950 px-4 py-2 rounded-full font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap"
             >
               Redaguoti failą →
