@@ -81,7 +81,7 @@ export const api = {
   createTemplate(data: { name: string; description?: string; content?: string; file_key?: string }) {
     return request<Template>("/templates", { method: "POST", body: JSON.stringify(data) });
   },
-  updateTemplate(id: number, data: Partial<{ name: string; description: string; content: string; logo_x: number; logo_y: number; logo_w: number; client_sig_x: number | null; client_sig_y: number | null; user_sig_x: number | null; user_sig_y: number | null }>) {
+  updateTemplate(id: number, data: Partial<{ name: string; description: string; content: string; file_key: string; logo_x: number | null; logo_y: number | null; logo_w: number | null; client_sig_x: number | null; client_sig_y: number | null; user_sig_x: number | null; user_sig_y: number | null }>) {
     return request<Template>(`/templates/${id}`, { method: "PUT", body: JSON.stringify(data) });
   },
   duplicateTemplate(id: number) {
@@ -337,7 +337,8 @@ export type Template = {
   id: number;
   name: string;
   description: string | null;
-  content: string;
+  content: string | null;
+  docx_path: string | null;
   status: "draft" | "active" | "archived";
   logo_x: number;
   logo_y: number;

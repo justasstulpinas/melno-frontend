@@ -77,7 +77,7 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
 
   function selectTemplate(t: Template) {
     setSelected(t);
-    const fields = extractOwnerFields(t.content);
+    const fields = extractOwnerFields(t.content ?? "");
     setOwnerFields(fields);
     const initial: Record<string, string> = {};
     for (const field of fields) {

@@ -76,7 +76,7 @@ export default function ShareLinkPage() {
     Promise.all([api.getTemplate(id), api.getProfile()])
       .then(([t, profile]) => {
         setTemplate(t);
-        const fields = extractOwnerFields(t.content);
+        const fields = extractOwnerFields(t.content ?? "");
         setOwnerFields(fields);
         const initial: Record<string, string> = {};
         for (const field of fields) {

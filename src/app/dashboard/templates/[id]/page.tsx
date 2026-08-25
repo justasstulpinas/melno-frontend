@@ -136,7 +136,7 @@ export default function TemplateDetailPage() {
   if (error) return <div className="p-8 text-sm text-red-400">{error}</div>;
   if (!template) return null;
 
-  const fields = extractFields(template.content);
+  const fields = extractFields(template.content ?? "");
   const activeLinks = links.filter((l) => !l.is_revoked && new Date(l.expires_at) > new Date());
   const confirmedSubmissions = submissions.filter((s) => s.status === "confirmed" || s.status === "completed");
   const pendingSubmissions = submissions.filter((s) => s.status === "submitted");
@@ -311,8 +311,8 @@ export default function TemplateDetailPage() {
             </div>
             <div className={`flex-1 overflow-y-auto max-h-80 ${showPreview ? "bg-white p-8" : "p-5"}`}>
               {!showPreview
-                ? <HighlightedContent content={template.content} />
-                : <div className="text-zinc-900 text-sm leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: template.content }} />
+                ? <HighlightedContent content={template.content ?? ""} />
+                : <div className="text-zinc-900 text-sm leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: template.content ?? "" }} />
               }
             </div>
           </div>
