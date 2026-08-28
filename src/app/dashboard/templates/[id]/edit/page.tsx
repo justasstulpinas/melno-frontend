@@ -299,6 +299,10 @@ export default function EditTemplatePage() {
   const [fileKey, setFileKey] = useState("");
   const [placeholders, setPlaceholders] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState("");
+  // Sidebar button clicks trigger mouseup which clears the browser selection before
+  // the onClick handler runs. Store the last non-empty selection in a ref so the
+  // button handler can read it regardless of when mouseup fires.
+  const lastSelectionRef = useRef("");
   const [replacing, setReplacing] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const fileReplaceRef = useRef<HTMLInputElement>(null);
@@ -320,6 +324,17 @@ export default function EditTemplatePage() {
           setIsDocx(true);
           const buf = await api.getTemplateDocx(id);
           setDocxBuffer(buf);
+          // Upload to tmp on load so placeholders show immediately and checkout is instant
+          try {
+            const docxFile = new File([buf], "template.docx", {
+              type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
+            const { file_key, placeholders: ph } = await api.uploadDocx(docxFile);
+            setFileKey(file_key);
+            setPlaceholders(ph);
+          } catch {
+            // non-fatal — user can still edit, checkout will happen on first replace
+          }
         } else {
           setContent(t.content ?? "");
         }
@@ -342,7 +357,7 @@ export default function EditTemplatePage() {
   }
 
   async function handleReplaceText(placeholder: string, textOverride?: string) {
-    const text = textOverride ?? selectedText;
+    const text = textOverride ?? lastSelectionRef.current;
     if (!text) return;
     setReplacing(placeholder);
     setError("");
@@ -350,6 +365,7 @@ export default function EditTemplatePage() {
       const fk = await checkoutDocx();
       const { placeholders: ph } = await api.replaceText(fk, text, placeholder);
       setPlaceholders(ph);
+      lastSelectionRef.current = "";
       setSelectedText("");
       const buf = await api.getTmpDocx(fk);
       setDocxBuffer(buf);
@@ -442,7 +458,10 @@ export default function EditTemplatePage() {
   }
 
   const anyDragging = logo.dragging || logo.resizing || clientSig.dragging || clientSig.resizing || userSig.dragging || userSig.resizing;
-  const handleSelection = useCallback((text: string) => setSelectedText(text), []);
+  const handleSelection = useCallback((text: string) => {
+    if (text) lastSelectionRef.current = text;
+    setSelectedText(text);
+  }, []);
 
   if (!ready && !error) return <div className="p-8 text-sm text-zinc-500">Kraunama…</div>;
   if (error && !ready) return <div className="p-8 text-sm text-red-400">{error}</div>;

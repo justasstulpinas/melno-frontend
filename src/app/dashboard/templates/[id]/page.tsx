@@ -136,7 +136,15 @@ export default function TemplateDetailPage() {
   if (error) return <div className="p-8 text-sm text-red-400">{error}</div>;
   if (!template) return null;
 
-  const fields = extractFields(template.content ?? "");
+  const fields = template.docx_path
+    ? {
+        owner: template.placeholders.filter((f) => f.startsWith("owner_")),
+        system: template.placeholders.filter((f) => f.startsWith("sys_")),
+        client: template.placeholders.filter(
+          (f) => !f.startsWith("owner_") && !f.startsWith("sys_") && f !== "signature" && f !== "user_signature"
+        ),
+      }
+    : extractFields(template.content ?? "");
   const activeLinks = links.filter((l) => !l.is_revoked && new Date(l.expires_at) > new Date());
   const confirmedSubmissions = submissions.filter((s) => s.status === "confirmed" || s.status === "completed");
   const pendingSubmissions = submissions.filter((s) => s.status === "submitted");

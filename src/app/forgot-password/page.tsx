@@ -6,8 +6,11 @@ import { Syne } from "next/font/google";
 import { api } from "@/lib/api";
 import { FloatingInput } from "@/components/FloatingInput";
 import { validateEmail } from "@/lib/validation";
+import { MelnoLogo } from "@/components/MelnoLogo";
+import { HeroCycler } from "@/components/HeroCycler";
+import { c, type, r } from "@/lib/design";
 
-const syne = Syne({ subsets: ["latin"], weight: ["400", "500", "600"] });
+const syne = Syne({ subsets: ["latin"], weight: ["400", "600"] });
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -36,28 +39,49 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex flex-col justify-between w-1/3 bg-zinc-900 px-10 py-12">
-        <Link href="/" className=""><img src="/logo.png" alt="Melno" className="h-7 w-auto" /></Link>
-        <div>
-          <p className={`${syne.className} text-4xl font-semibold text-white leading-snug mb-6`}>
-            Sutartys.<br />Greitai.<br />Paprastai.
-          </p>
-          <p className={`${syne.className} text-sm text-zinc-500 leading-relaxed`}>
-            Sukurk šabloną vieną kartą ir siųsk pasirašyti klientams per 30 sekundžių.
-          </p>
+    <div className={`${syne.className} min-h-screen flex`}>
+
+      {/* ── Left: word cycler ── */}
+      <div
+        className="hidden lg:flex flex-col w-1/3 px-12 py-10"
+        style={{ background: c.bg }}
+      >
+        <div className="mb-auto pb-8">
+          <Link href="/"><MelnoLogo /></Link>
         </div>
-        <p className={`${syne.className} text-xs text-zinc-600`}>© 2026 Melno</p>
+
+        <div className="flex-1 flex flex-col justify-center">
+          <HeroCycler
+            className="font-semibold leading-none"
+            style={{
+              fontSize: "clamp(28px, 3vw, 48px)",
+              letterSpacing: "-0.03em",
+              color: c.textPrimary,
+            }}
+          />
+        </div>
+
+        <p style={{ ...type.label, marginTop: 24, letterSpacing: "normal", textTransform: "none" }}>
+          © 2026 Melno
+        </p>
       </div>
 
-      <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center px-6 py-12">
+      {/* ── Right: form ── */}
+      <div
+        className="flex-1 flex flex-col items-center justify-center px-6 py-12"
+        style={{ background: c.surface }}
+      >
         <div className="w-full max-w-md">
-          <Link href="/" className="block mb-10 lg:hidden text-center"><img src="/logo.png" alt="Melno" className="h-7 w-auto mx-auto" /></Link>
+
+          {/* Mobile logo */}
+          <Link href="/" className="block text-center mb-10 lg:hidden">
+            <MelnoLogo />
+          </Link>
 
           {!submitted ? (
             <>
-              <h1 className="text-2xl font-semibold text-white mb-1">Pamiršote slaptažodį?</h1>
-              <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>
+              <h1 style={{ ...type.display, marginBottom: 4 }}>Pamiršote slaptažodį?</h1>
+              <p style={{ ...type.bodyLarge, marginBottom: 32 }}>
                 Įveskite el. paštą ir atsiųsime slaptažodžio atnaujinimo nuorodą.
               </p>
 
@@ -74,36 +98,72 @@ export default function ForgotPasswordPage() {
                 />
 
                 {error && (
-                  <p className={`${syne.className} text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-4 py-2`}>
+                  <p style={{
+                    ...type.body,
+                    color: "#f87171",
+                    background: "rgba(127,29,29,0.3)",
+                    border: "1px solid rgba(153,27,27,0.5)",
+                    borderRadius: r.pill,
+                    padding: "8px 16px",
+                  }}>
                     {error}
                   </p>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full bg-white text-zinc-950 rounded-full py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+                  disabled={loading}
+                  style={{
+                    background: c.action,
+                    color: c.actionText,
+                    borderRadius: r.pill,
+                    border: "none",
+                    padding: "10px 0",
+                    width: "100%",
+                    fontFamily: "'Syne', sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.7 : 1,
+                    marginTop: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    transition: "opacity 0.2s",
+                  }}
                 >
-                  {loading && <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
+                  {loading && (
+                    <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                  )}
                   {loading ? "Siunčiama…" : "Siųsti nuorodą"}
                 </button>
               </form>
             </>
           ) : (
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center mx-auto mb-6">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-6"
+                style={{ background: "rgba(5,46,22,0.4)", border: "1px solid rgba(20,83,45,0.5)" }}
+              >
                 <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-semibold text-white mb-2">Patikrinkite el. paštą</h1>
-              <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>
-                Jei paskyra su adresu <span className="text-zinc-200">{email}</span> egzistuoja, netrukus gausite nuorodą.
+              <h1 style={{ ...type.display, marginBottom: 8 }}>Patikrinkite el. paštą</h1>
+              <p style={{ ...type.body, marginBottom: 0 }}>
+                Jei paskyra su adresu{" "}
+                <span style={{ color: c.textPrimary }}>{email}</span>{" "}
+                egzistuoja, netrukus gausite nuorodą.
               </p>
             </div>
           )}
 
-          <p className={`${syne.className} text-center text-sm text-zinc-500 mt-8`}>
-            <Link href="/login" className="text-zinc-400 hover:text-white transition-colors">
+          <p style={{ ...type.body, textAlign: "center", marginTop: 32 }}>
+            <Link href="/login" style={{ color: c.textMuted }}>
               ← Grįžti į prisijungimą
             </Link>
           </p>

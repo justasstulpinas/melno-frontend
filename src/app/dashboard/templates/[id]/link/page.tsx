@@ -64,6 +64,7 @@ export default function ShareLinkPage() {
   const [template, setTemplate] = useState<Template | null>(null);
   const [ownerFields, setOwnerFields] = useState<string[]>([]);
   const [prefill, setPrefill] = useState<Record<string, string>>({});
+  const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
   const [expiresInHours, setExpiresInHours] = useState(72);
   const [result, setResult] = useState<SecureSubmissionResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,15 +77,20 @@ export default function ShareLinkPage() {
     Promise.all([api.getTemplate(id), api.getProfile()])
       .then(([t, profile]) => {
         setTemplate(t);
-        const fields = extractOwnerFields(t.content ?? "");
+        const fields = t.docx_path
+          ? t.placeholders.filter((f) => f.startsWith("owner_"))
+          : extractOwnerFields(t.content ?? "");
         setOwnerFields(fields);
         const initial: Record<string, string> = {};
+        const filled = new Set<string>();
         for (const field of fields) {
           const profileKey = PROFILE_MAP[field];
           const profileValue = profileKey ? (profile[profileKey] as string | null) : null;
           initial[field] = profileValue ?? "";
+          if (profileValue) filled.add(field);
         }
         setPrefill(initial);
+        setAutoFilled(filled);
       })
       .catch(() => {})
       .finally(() => setFetching(false));
@@ -159,16 +165,26 @@ export default function ShareLinkPage() {
                 <h2 className="text-sm font-semibold text-white mb-0.5">Jūsų duomenys</h2>
                 <p className="text-xs text-zinc-500">Užpildyta iš jūsų profilio. Redaguokite jei reikia.</p>
               </div>
-              {nonDateFields.map((field) => (
-                <div key={field}>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">{FRIENDLY[field] ?? field}</label>
-                  <input
-                    value={prefill[field] ?? ""}
-                    onChange={(e) => setPrefill({ ...prefill, [field]: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600"
-                  />
-                </div>
-              ))}
+              {nonDateFields.map((field) => {
+                const isAuto = autoFilled.has(field);
+                return (
+                  <div key={field}>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1.5">{FRIENDLY[field] ?? field}</label>
+                    <input
+                      value={prefill[field] ?? ""}
+                      onChange={(e) => {
+                        setPrefill({ ...prefill, [field]: e.target.value });
+                        setAutoFilled((prev) => { const next = new Set(prev); next.delete(field); return next; });
+                      }}
+                      className={`w-full rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 transition-colors ${
+                        isAuto
+                          ? "bg-yellow-950/30 border border-yellow-600/60 focus:ring-yellow-600/40"
+                          : "bg-zinc-800 border border-zinc-700 focus:ring-zinc-600"
+                      }`}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -178,14 +194,23 @@ export default function ShareLinkPage() {
                 <h2 className="text-sm font-semibold text-white mb-0.5">Sutarties datos</h2>
                 <p className="text-xs text-zinc-500">Pasirinkite datas, kurios bus sutartyje.</p>
               </div>
-              {dateFields.map((field) => (
+              {dateFields.map((field) => {
+                const isAuto = autoFilled.has(field);
+                return (
                 <div key={field}>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">{FRIENDLY[field] ?? field.replace(/_/g, " ")}</label>
                   <input
                     type="date"
                     value={prefill[field] ?? ""}
-                    onChange={(e) => setPrefill({ ...prefill, [field]: e.target.value })}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600 [color-scheme:dark]"
+                    onChange={(e) => {
+                      setPrefill({ ...prefill, [field]: e.target.value });
+                      setAutoFilled((prev) => { const next = new Set(prev); next.delete(field); return next; });
+                    }}
+                    className={`w-full rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 [color-scheme:dark] transition-colors ${
+                      isAuto
+                        ? "bg-yellow-950/30 border border-yellow-600/60 focus:ring-yellow-600/40"
+                        : "bg-zinc-800 border border-zinc-700 focus:ring-zinc-600"
+                    }`}
                   />
                   {(field.includes("end") || field.includes("due") || field.includes("deadline")) && ownerFields.includes("owner_start_date") && (
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -198,7 +223,8 @@ export default function ShareLinkPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

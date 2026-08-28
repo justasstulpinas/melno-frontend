@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { api, SecureSubmissionMeta } from "@/lib/api";
+import { MelnoLogo } from "@/components/MelnoLogo";
 
 type Step = "loading" | "not_auth" | "not_found" | "unavailable" | "code_entry" | "downloading" | "success";
 
@@ -89,12 +90,14 @@ function OwnerDownloadInner() {
     }
   }
 
-  const pageClass = "min-h-screen bg-zinc-950 flex items-center justify-center px-4";
+  const pageClass = "min-h-screen bg-zinc-950 flex items-center justify-center px-4 relative";
+  const logo = <div className="absolute top-6 left-6"><MelnoLogo /></div>;
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (step === "loading") {
     return (
       <div className={pageClass}>
+        {logo}
         <p className="text-sm text-zinc-500">Kraunama…</p>
       </div>
     );
@@ -104,6 +107,7 @@ function OwnerDownloadInner() {
   if (step === "not_found") {
     return (
       <div className={pageClass}>
+        {logo}
         <div className="text-center max-w-sm">
           <div className="w-14 h-14 bg-red-950 border border-red-800 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,6 +125,7 @@ function OwnerDownloadInner() {
   if (step === "unavailable") {
     return (
       <div className={pageClass}>
+        {logo}
         <div className="text-center max-w-sm">
           <div className="w-14 h-14 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,6 +147,7 @@ function OwnerDownloadInner() {
   if (step === "downloading") {
     return (
       <div className={pageClass}>
+        {logo}
         <div className="text-center">
           <p className="text-sm text-zinc-400 mb-2">Atsisiunčiama…</p>
           <p className="text-xs text-zinc-600">Prašome palaukti. Neuždarykite šio lango.</p>
@@ -154,6 +160,7 @@ function OwnerDownloadInner() {
   if (step === "success") {
     return (
       <div className={pageClass}>
+        {logo}
         <div className="text-center max-w-sm">
           <div className="w-14 h-14 bg-emerald-950 border border-emerald-800 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,6 +185,7 @@ function OwnerDownloadInner() {
   // ── Code entry ───────────────────────────────────────────────────────────
   return (
     <div className={pageClass}>
+      {logo}
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="text-xs text-zinc-500 mb-2">Pasirašyta sutartis</p>

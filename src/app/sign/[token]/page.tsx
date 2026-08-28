@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { api, SecureSubmissionMeta, SecureSubmissionPreview } from "@/lib/api";
+import { MelnoLogo } from "@/components/MelnoLogo";
+import { inputClass, inputDateClass } from "@/lib/design";
 
 // ─────────────────────────────────────────────────────────────
 // Signature pad
@@ -141,12 +143,108 @@ function buildPreviewHtml(content: string, fields: Record<string, string>): stri
   return content.replace(/\{\{([^}]+)\}\}/g, (_match, raw) => {
     const key = raw.trim();
     const val = fields[key];
-    if (val) return `<mark style="background:#fef9c3;color:#713f12;padding:0 3px;border-radius:3px">${val}</mark>`;
-    return `<mark style="background:#fee2e2;color:#991b1b;padding:0 3px;border-radius:3px">{{${key}}}</mark>`;
+    if (val) return `<mark data-field="${key}" style="background:#fef9c3;color:#713f12;padding:0 3px;border-radius:3px;transition:outline 0.15s">${val}</mark>`;
+    return `<mark data-field="${key}" style="background:#fee2e2;color:#991b1b;padding:0 3px;border-radius:3px;transition:outline 0.15s">{{${key}}}</mark>`;
   });
 }
 
+// ─────────────────────────────────────────────────────────────
+// Inline DOCX viewer for the signing preview
+// ─────────────────────────────────────────────────────────────
+function SignDocxViewer({ buffer }: { buffer: ArrayBuffer }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current || !buffer.byteLength) return;
+    import("docx-preview").then(({ renderAsync }) => {
+      ref.current!.innerHTML = "";
+      renderAsync(buffer, ref.current!, undefined, {
+        className: "docx",
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+        breakPages: true,
+        useBase64URL: true,
+      });
+    });
+  }, [buffer]);
+  return <div ref={ref} className="docx-preview w-full" />;
+}
+
 type Step = "loading" | "not_found" | "code_entry" | "preview_loading" | "preview" | "fill_sign" | "signing" | "success" | "declined";
+
+// ─────────────────────────────────────────────────────────────
+// 6-box OTP input — supports paste, auto-advance, backspace
+// ─────────────────────────────────────────────────────────────
+function OtpInput({
+  value,
+  onChange,
+  hasError,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  hasError: boolean;
+  disabled?: boolean;
+}) {
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
+  const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? "");
+
+  function handleChange(i: number, raw: string) {
+    const char = raw.replace(/\D/g, "").slice(-1);
+    const next = [...digits];
+    next[i] = char;
+    onChange(next.join(""));
+    if (char && i < 5) refs.current[i + 1]?.focus();
+  }
+
+  function handleKeyDown(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace") {
+      if (digits[i]) {
+        const next = [...digits]; next[i] = ""; onChange(next.join(""));
+      } else if (i > 0) {
+        refs.current[i - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft" && i > 0) {
+      refs.current[i - 1]?.focus();
+    } else if (e.key === "ArrowRight" && i < 5) {
+      refs.current[i + 1]?.focus();
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    e.preventDefault();
+    onChange(pasted.padEnd(6, "").slice(0, 6));
+    refs.current[Math.min(pasted.length, 5)]?.focus();
+  }
+
+  const base = "w-11 h-14 text-center text-xl font-mono rounded-lg border bg-zinc-800 text-white focus:outline-none transition-colors";
+  const normal = "border-zinc-700 focus:border-zinc-400";
+  const error = "border-red-500 focus:border-red-400";
+
+  return (
+    <div className="flex gap-2 justify-center">
+      {digits.map((d, i) => (
+        <input
+          key={i}
+          ref={(el) => { refs.current[i] = el; }}
+          type="text"
+          inputMode="numeric"
+          maxLength={2}
+          value={d}
+          disabled={disabled}
+          autoFocus={i === 0}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={handlePaste}
+          onFocus={(e) => e.target.select()}
+          className={`${base} ${hasError ? error : normal} disabled:opacity-50`}
+        />
+      ))}
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────
 // Main page
@@ -158,6 +256,7 @@ export default function SignPage() {
   const [step, setStep] = useState<Step>("loading");
   const [meta, setMeta] = useState<SecureSubmissionMeta | null>(null);
   const [preview, setPreview] = useState<SecureSubmissionPreview | null>(null);
+  const [docxPreviewBuffer, setDocxPreviewBuffer] = useState<ArrayBuffer | null>(null);
 
   // Code entry state
   const [code, setCode] = useState("");
@@ -176,7 +275,27 @@ export default function SignPage() {
   const [signError, setSignError] = useState("");
   const [contractViewedAt, setContractViewedAt] = useState<string | null>(null);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const docPanelRef = useRef<HTMLDivElement>(null);
   const pageClass = "min-h-[100dvh] bg-zinc-950 flex flex-col";
+
+  function highlightField(fieldName: string, on: boolean) {
+    const panel = docPanelRef.current;
+    if (!panel) return;
+    const els = panel.querySelectorAll<HTMLElement>(`[data-field="${fieldName}"]`);
+    els.forEach((el) => {
+      if (on) {
+        el.style.outline = "2px solid #3b82f6";
+        el.style.outlineOffset = "2px";
+      } else {
+        el.style.outline = "";
+        el.style.outlineOffset = "";
+      }
+    });
+    if (on && els.length > 0) {
+      els[0].scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 
   // Load metadata
   useEffect(() => {
@@ -210,6 +329,10 @@ export default function SignPage() {
       const initial: Record<string, string> = {};
       prev.fields.filter((f) => f !== "signature").forEach((f) => { initial[f] = ""; });
       setFields(initial);
+      // For DOCX templates, fetch the partially-filled DOCX for preview
+      if (prev.is_docx) {
+        api.getSigningPreviewDocx(uuid).then(setDocxPreviewBuffer).catch(() => {});
+      }
       setStep("preview");
       // Notify backend that client opened preview
       api.markSigningViewed(uuid).catch(() => {});
@@ -281,7 +404,8 @@ export default function SignPage() {
 
   if (step === "loading") {
     return (
-      <div className={`${pageClass} items-center justify-center`}>
+      <div className={`${pageClass} items-center justify-center relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
         <p className="text-sm text-zinc-500">Kraunama…</p>
       </div>
     );
@@ -289,7 +413,8 @@ export default function SignPage() {
 
   if (step === "not_found") {
     return (
-      <div className={`${pageClass} items-center justify-center px-4`}>
+      <div className={`${pageClass} items-center justify-center px-4 relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
         <div className="text-center">
           <p className="text-lg font-semibold text-white mb-2">Nuoroda nepasiekiama</p>
           <p className="text-sm text-zinc-400">Nuoroda nerasta, baigė galioti arba jau panaudota.</p>
@@ -300,7 +425,8 @@ export default function SignPage() {
 
   if (step === "declined") {
     return (
-      <div className={`${pageClass} items-center justify-center px-4`}>
+      <div className={`${pageClass} items-center justify-center px-4 relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
         <div className="text-center max-w-sm w-full">
           <div className="w-14 h-14 bg-red-950 border border-red-800 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +442,8 @@ export default function SignPage() {
 
   if (step === "success") {
     return (
-      <div className={`${pageClass} items-center justify-center px-4`}>
+      <div className={`${pageClass} items-center justify-center px-4 relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
         <div className="text-center max-w-sm w-full">
           <div className="w-14 h-14 bg-emerald-950 border border-emerald-800 rounded-full flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,33 +460,42 @@ export default function SignPage() {
 
   if (step === "code_entry") {
     return (
-      <div className={`${pageClass} items-center justify-center px-4`} style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <div className="w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <p className="text-xs text-zinc-500 mb-2">Sutartis pasirašymui</p>
-            <h1 className="text-2xl font-semibold text-white">{meta?.template_name}</h1>
-          </div>
+      <div className={`${pageClass} items-center justify-center px-4 relative`} style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
+        <div className="w-full max-w-sm flex flex-col gap-4">
 
+          {/* Owner info card */}
+          {meta && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-zinc-500 leading-tight">Sutartį siuntė</p>
+                <p className="text-sm font-medium text-white truncate">{meta.template_name}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Code entry card */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-white mb-1">Patvirtinimo kodas</h2>
-            <p className="text-xs text-zinc-500 mb-5">
-              Įveskite 6 skaitmenų kodą, kurį gavote el. laiške arba iš sutarties siuntėjo.
+            <h2 className="text-sm font-semibold text-white mb-1 text-center">Patvirtinimo kodas</h2>
+            <p className="text-xs text-zinc-500 mb-6 text-center">
+              Įveskite 6 skaitmenų kodą iš el. laiško. Galite ir įklijuoti.
             </p>
 
             <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
+              <OtpInput
                 value={code}
-                onChange={(e) => { setCode(e.target.value.replace(/\D/g, "")); setCodeError(""); }}
-                placeholder="000000"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-center text-2xl font-mono text-white tracking-widest placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                onChange={(v) => { setCode(v); setCodeError(""); }}
+                hasError={!!codeError}
+                disabled={codeLoading}
               />
 
               {codeError && (
-                <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-md px-3 py-2">
+                <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-md px-3 py-2 text-center">
                   {codeError}
                 </p>
               )}
@@ -367,15 +503,16 @@ export default function SignPage() {
               <button
                 type="submit"
                 disabled={codeLoading || code.length !== 6}
-                className="w-full bg-white text-zinc-950 py-3 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                className="w-full bg-white text-zinc-950 py-3 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
+                {codeLoading && <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
                 {codeLoading ? "Tikrinama…" : "Tęsti →"}
               </button>
             </form>
           </div>
 
           {meta?.is_sensitive && (
-            <div className="mt-4 bg-amber-950/30 border border-amber-800/40 rounded-lg px-4 py-3">
+            <div className="bg-amber-950/30 border border-amber-800/40 rounded-lg px-4 py-3">
               <p className="text-xs text-amber-400">
                 Ši sutartis naudos jūsų asmens kodą. Duomenys nebus saugomi serveryje.
               </p>
@@ -388,7 +525,8 @@ export default function SignPage() {
 
   if (step === "preview_loading") {
     return (
-      <div className={`${pageClass} items-center justify-center`}>
+      <div className={`${pageClass} items-center justify-center relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
         <p className="text-sm text-zinc-500">Kraunama sutartis…</p>
       </div>
     );
@@ -396,7 +534,8 @@ export default function SignPage() {
 
   if (step === "signing") {
     return (
-      <div className={`${pageClass} items-center justify-center`}>
+      <div className={`${pageClass} items-center justify-center relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
         <div className="text-center">
           <p className="text-sm text-zinc-400 mb-2">Pasirašoma…</p>
           <p className="text-xs text-zinc-600">Prašome palaukti. Neuždarykite šio lango.</p>
@@ -405,8 +544,16 @@ export default function SignPage() {
     );
   }
 
-  // preview and fill_sign share the page layout
+  // both "preview" and "fill_sign" steps share this unified layout
   const publicFields = preview ? preview.fields.filter((f) => f !== "signature") : [];
+
+  const ownerContacts = preview
+    ? ([
+        preview.owner_company && { label: "Įmonė", value: preview.owner_company },
+        preview.owner_email && { label: "El. paštas", value: preview.owner_email },
+        preview.owner_phone && { label: "Tel.", value: preview.owner_phone },
+      ].filter(Boolean) as { label: string; value: string }[])
+    : [];
 
   return (
     <>
@@ -418,250 +565,234 @@ export default function SignPage() {
       )}
 
       <div
-        className={pageClass}
-        style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="h-[100dvh] flex flex-col overflow-hidden"
+        style={{
+          background: "#1e1e1e",
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
       >
-        <div className="flex-1 overflow-auto py-6 px-4">
-          <div className="max-w-3xl mx-auto">
+        {/* ── Top bar ── */}
+        <div className="shrink-0 h-14 flex items-center px-5" style={{ borderBottom: "1px solid #2a2a2a" }}>
+          <MelnoLogo />
+        </div>
 
-            {/* Header */}
-            <div className="mb-5">
-              <p className="text-xs text-zinc-500 mb-1">Sutartis pasirašymui</p>
-              <h1 className="text-xl sm:text-2xl font-semibold text-white">{meta?.template_name}</h1>
-            </div>
+        {/* ── Sidebar + document row ── */}
+        <form ref={formRef} onSubmit={handleSign} className="flex-1 min-h-0 flex">
 
-            {/* Step tabs */}
-            <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1 mb-5">
-              <button
-                type="button"
-                onClick={() => step === "fill_sign" && setStep("preview")}
-                className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${step === "preview" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"}`}
-              >
-                Sutartis
-              </button>
-              <button
-                type="button"
-                onClick={() => step === "preview" && setStep("fill_sign")}
-                className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${step === "fill_sign" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"}`}
-              >
-                Pildyti ir pasirašyti
-              </button>
-            </div>
+          {/* ── Left sidebar (scrolls internally) ── */}
+          <div className="w-[264px] shrink-0 overflow-y-auto flex flex-col gap-2 p-3" style={{ background: "#1e1e1e", borderRight: "1px solid #2a2a2a" }}>
 
-            {/* ── Preview tab ── */}
-            {step === "preview" && preview && (
-              <div>
-                <p className="text-xs text-zinc-500 mb-3">
-                  Nepildyti laukai pažymėti{" "}
-                  <mark style={{ background: "#fee2e2", color: "#991b1b", padding: "0 3px", borderRadius: 3 }}>raudonai</mark>
-                  , užpildyti —{" "}
-                  <mark style={{ background: "#fef9c3", color: "#713f12", padding: "0 3px", borderRadius: 3 }}>geltonai</mark>.
-                </p>
-
-                {preview.is_sensitive && (
-                  <div className="mb-4 bg-amber-950/30 border border-amber-800/40 rounded-lg px-4 py-3">
-                    <p className="text-xs text-amber-400">
-                      Ši sutartis naudoja jūsų asmens kodą. Jis bus panaudotas tik dokumento generavimui ir nebus saugomas jokiose duomenų bazėse.
-                    </p>
-                  </div>
-                )}
-
-                <div className="bg-[#c8c8c8] rounded-xl py-4 px-2 sm:py-10 sm:px-8 shadow-inner overflow-x-auto">
-                  <div className="mx-auto bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)] w-full relative" style={{ maxWidth: 794 }}>
-                    {preview.logo_image && (
-                      <img
-                        src={`data:image/png;base64,${preview.logo_image}`}
-                        alt="Logo"
-                        style={{
-                          position: "absolute",
-                          left: `${preview.logo_x}%`,
-                          top: `${preview.logo_y}%`,
-                          width: `${preview.logo_w}%`,
-                          height: "auto",
-                          objectFit: "contain",
-                          zIndex: 10,
-                          pointerEvents: "none",
-                        }}
-                      />
-                    )}
-                    <div
-                      style={{
-                        padding: "clamp(16px,5vw,91px) clamp(12px,4vw,61px) clamp(16px,4vw,76px)",
-                        fontFamily: "'Times New Roman', Times, serif",
-                        fontSize: "clamp(11px,2vw,16px)",
-                        lineHeight: 1.6,
-                        color: "#18181b",
-                      }}
-                      dangerouslySetInnerHTML={{ __html: buildPreviewHtml(preview.content, fields) }}
-                    />
-                  </div>
+            {/* Card 1: Owner identity */}
+            <div className="rounded-xl p-3" style={{ background: "#2a2a2a" }}>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700/60 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
+                <p className="text-sm font-semibold text-zinc-100 truncate leading-tight">
+                  {preview?.owner_name ?? meta?.template_name}
+                </p>
+              </div>
+              {ownerContacts.length > 0 && (
+                <div className="space-y-1.5">
+                  {ownerContacts.map(({ label, value }) => (
+                    <div key={label} className="flex items-baseline gap-1.5">
+                      <span className="text-[10px] shrink-0 w-16" style={{ color: "#888" }}>{label}</span>
+                      <span className="text-[11px] truncate" style={{ color: "#d4d4d4" }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                <div className="mt-5 flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={handleDecline}
-                    className="text-sm text-zinc-500 hover:text-red-400 transition-colors px-4 py-2.5"
-                  >
-                    Atmesti sutartį
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep("fill_sign")}
-                    className="bg-white text-zinc-950 px-5 py-2.5 rounded-md text-sm font-medium hover:bg-zinc-200 transition-colors"
-                  >
-                    Pildyti ir pasirašyti →
-                  </button>
+            {/* Card 2: Client placeholder fields */}
+            {publicFields.length > 0 && (
+              <div className="rounded-xl p-3" style={{ background: "#2a2a2a" }}>
+                <p className="text-[9px] uppercase tracking-widest mb-2" style={{ color: "#666" }}>Kliento laukai</p>
+                <div className="space-y-3">
+                  {publicFields.map((field) => (
+                    <div key={field}>
+                      <div
+                        onMouseEnter={() => highlightField(field, true)}
+                        onMouseLeave={() => highlightField(field, false)}
+                        className="flex items-center gap-2 px-1.5 py-1 rounded-md cursor-default transition-colors group mb-1.5"
+                        onMouseOver={(e) => (e.currentTarget.style.background = "#363636")}
+                        onMouseOut={(e) => (e.currentTarget.style.background = "")}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full shrink-0 transition-colors group-hover:bg-blue-400" style={{ background: "#555" }} />
+                        <span className="text-[11px] capitalize transition-colors group-hover:text-white" style={{ color: "#d4d4d4" }}>
+                          {field.replace(/_/g, " ")}
+                        </span>
+                        {(field === "client_ID" || field === "personal_code" || field === "identity_number") && (
+                          <span className="ml-auto text-[9px] text-amber-600 shrink-0">nesaugoma</span>
+                        )}
+                      </div>
+                      {isDateField(field) ? (
+                        <input
+                          type="date"
+                          required
+                          value={fields[field] ?? ""}
+                          onChange={(e) => setFields((prev) => ({ ...prev, [field]: formatDateForDisplay(e.target.value) }))}
+                          className={inputDateClass}
+                        />
+                      ) : (
+                        <input
+                          required
+                          value={fields[field] ?? ""}
+                          onChange={(e) => setFields((prev) => ({ ...prev, [field]: e.target.value }))}
+                          className={inputClass}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* ── Fill + sign tab ── */}
-            {step === "fill_sign" && preview && (
-              <form onSubmit={handleSign} className="flex flex-col gap-4">
+            {/* Card 4: Signer name */}
+            <div className="rounded-xl p-3" style={{ background: "#2a2a2a" }}>
+              <label className="block text-[9px] uppercase tracking-widest mb-2" style={{ color: "#666" }}>
+                Jūsų vardas ir pavardė
+              </label>
+              <input
+                required
+                value={signerName}
+                onChange={(e) => setSignerName(e.target.value)}
+                placeholder="Vardas Pavardė"
+                className={inputClass}
+              />
+              <p className="text-[9px] mt-1.5" style={{ color: "#555" }}>Įtraukiamas į sutarties auditą.</p>
+            </div>
 
-                {/* Form fields */}
-                {publicFields.length > 0 && (
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6 flex flex-col gap-4">
-                    <div>
-                      <h2 className="text-sm font-semibold text-white">Užpildykite duomenis</h2>
-                      {preview.is_sensitive && (
-                        <p className="text-xs text-amber-400/80 mt-1">
-                          Visi duomenys, įskaitant asmens kodą, bus naudojami tik dokumento generavimui ir nebus saugomi.
-                        </p>
-                      )}
-                    </div>
-                    {publicFields.map((field) => (
-                      <div key={field}>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1.5 capitalize">
-                          {field.replace(/_/g, " ")}
-                          {field === "client_ID" || field === "personal_code" || field === "identity_number" ? (
-                            <span className="ml-1 text-amber-500 text-[10px]">(nesaugoma)</span>
-                          ) : null}
-                        </label>
-                        {isDateField(field) ? (
-                          <input
-                            type="date"
-                            required
-                            value={fields[field] ?? ""}
-                            onChange={(e) => setFields((prev) => ({ ...prev, [field]: formatDateForDisplay(e.target.value) }))}
-                            className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600 [color-scheme:dark]"
-                          />
-                        ) : (
-                          <input
-                            required
-                            value={fields[field] ?? ""}
-                            onChange={(e) => setFields((prev) => ({ ...prev, [field]: e.target.value }))}
-                            className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
-                          />
-                        )}
-                      </div>
-                    ))}
+            {/* Card 5: Signature */}
+            <div className="rounded-xl p-3" style={{ background: "#2a2a2a" }}>
+              <p className="text-[9px] uppercase tracking-widest mb-2" style={{ color: "#666" }}>
+                Parašas <span className="normal-case" style={{ color: "#555" }}>(neprivalomas)</span>
+              </p>
+              {signatureImage ? (
+                <div className="flex items-center gap-2">
+                  <div className="bg-white rounded-md p-1.5 flex-1">
+                    <img src={`data:image/png;base64,${signatureImage}`} alt="Parašas" className="h-8 w-full object-contain" />
                   </div>
-                )}
-
-                {/* Signer full name */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                    Vardas ir pavardė <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    required
-                    value={signerName}
-                    onChange={(e) => setSignerName(e.target.value)}
-                    placeholder="Vardas Pavardė"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
-                  />
-                  <p className="text-xs text-zinc-600 mt-1.5">Jūsų teisinis vardas, įtraukiamas į sutarties auditą.</p>
-                </div>
-
-                {/* Signature */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-                  <h2 className="text-sm font-semibold text-white mb-3">Parašas</h2>
-                  {signatureImage ? (
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white rounded-lg p-2 flex-1">
-                        <img
-                          src={`data:image/png;base64,${signatureImage}`}
-                          alt="Parašas"
-                          className="h-16 w-full object-contain"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowSignPad(true)}
-                        className="text-xs text-zinc-400 hover:text-white transition-colors shrink-0"
-                      >
-                        Keisti
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setShowSignPad(true)}
-                      className="w-full border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl py-6 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      + Pridėti parašą
-                    </button>
-                  )}
-                  <p className="text-xs text-zinc-600 mt-2">Parašas neprivalomas.</p>
-                </div>
-
-                {/* Consent checkboxes */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6 flex flex-col gap-4">
-                  <h2 className="text-sm font-semibold text-white">Sutikimas</h2>
-
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={confirmedRead}
-                      onChange={(e) => setConfirmedRead(e.target.checked)}
-                      className="mt-0.5 shrink-0 accent-white"
-                    />
-                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">
-                      Patvirtinu, kad perskaičiau šią sutartį ir suprantu jos turinį.
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={confirmedEsign}
-                      onChange={(e) => setConfirmedEsign(e.target.checked)}
-                      className="mt-0.5 shrink-0 accent-white"
-                    />
-                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">
-                      Sutinku pasirašyti šį dokumentą elektroniniu būdu. Suprantu, kad elektroninis parašas turi tokią pat teisinę galią kaip ranka rašytas parašas.
-                    </span>
-                  </label>
-                </div>
-
-                {signError && (
-                  <p className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-md px-3 py-2">
-                    {signError}
-                  </p>
-                )}
-
-                <div className="flex flex-col-reverse sm:flex-row gap-3 pb-4">
-                  <button
-                    type="button"
-                    onClick={() => setStep("preview")}
-                    className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2.5 text-center"
-                  >
-                    ← Peržiūrėti sutartį
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!confirmedRead || !confirmedEsign || !signerName.trim()}
-                    className="flex-1 bg-white text-zinc-950 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Pasirašyti ir atsisiųsti →
+                  <button type="button" onClick={() => setShowSignPad(true)} className="text-[11px] hover:text-white transition-colors shrink-0" style={{ color: "#888" }}>
+                    Keisti
                   </button>
                 </div>
-              </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSignPad(true)}
+                  className="w-full rounded-lg py-2.5 text-[11px] hover:text-zinc-300 transition-colors"
+                  style={{ border: "1px dashed #444", color: "#777" }}
+                >
+                  + Pridėti parašą
+                </button>
+              )}
+            </div>
+
+            {/* Sensitive warning */}
+            {preview?.is_sensitive && (
+              <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(120,80,0,0.15)", border: "1px solid rgba(180,120,0,0.25)" }}>
+                <p className="text-[10px] leading-relaxed" style={{ color: "#c09040" }}>
+                  Ši sutartis naudoja jūsų asmens kodą. Jis bus panaudotas tik dokumento generavimui ir nebus saugomas.
+                </p>
+              </div>
+            )}
+
+            {/* Error */}
+            {signError && (
+              <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(80,0,0,0.4)", border: "1px solid rgba(120,0,0,0.5)" }}>
+                <p className="text-[11px] text-red-400">{signError}</p>
+              </div>
             )}
           </div>
+
+          {/* ── Document panel — ONLY this scrolls ── */}
+          <div ref={docPanelRef} className="flex-1 min-h-0 overflow-y-auto" style={{ background: "#2a2a2a" }}>
+            <div style={{ padding: "24px" }}>
+              {preview && (
+                <div className="mx-auto rounded-xl overflow-hidden shadow-[0_4px_32px_rgba(0,0,0,0.5)] relative" style={{ maxWidth: 794 }}>
+                  {preview.is_docx ? (
+                    docxPreviewBuffer
+                      ? <SignDocxViewer buffer={docxPreviewBuffer} />
+                      : <div className="bg-white min-h-[300px] flex items-center justify-center"><p className="text-sm text-zinc-400">Kraunama…</p></div>
+                  ) : (
+                    <>
+                      {preview.logo_image && (
+                        <img
+                          src={`data:image/png;base64,${preview.logo_image}`}
+                          alt="Logo"
+                          style={{
+                            position: "absolute",
+                            left: `${preview.logo_x}%`,
+                            top: `${preview.logo_y}%`,
+                            width: `${preview.logo_w}%`,
+                            height: "auto",
+                            objectFit: "contain",
+                            zIndex: 10,
+                            pointerEvents: "none",
+                          }}
+                        />
+                      )}
+                      <div
+                        style={{
+                          padding: "clamp(16px,5vw,91px) clamp(12px,4vw,61px) clamp(16px,4vw,76px)",
+                          fontFamily: "'Times New Roman', Times, serif",
+                          fontSize: "clamp(11px,2vw,16px)",
+                          lineHeight: 1.6,
+                          color: "#18181b",
+                          background: "#fff",
+                        }}
+                        dangerouslySetInnerHTML={{ __html: buildPreviewHtml(preview.content, fields) }}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+        </form>
+
+        {/* ── Bottom bar — shrink-0 so it NEVER scrolls away ── */}
+        <div className="shrink-0 px-5 py-3 flex items-center gap-5" style={{ background: "#1e1e1e", borderTop: "1px solid #2a2a2a" }}>
+
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked={confirmedRead} onChange={(e) => setConfirmedRead(e.target.checked)} className="shrink-0 accent-white" />
+            <span className="text-[11px] group-hover:text-zinc-200 transition-colors select-none" style={{ color: "#aaa" }}>
+              Perskaičiau ir suprantu sutarties turinį
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked={confirmedEsign} onChange={(e) => setConfirmedEsign(e.target.checked)} className="shrink-0 accent-white" />
+            <span className="text-[11px] group-hover:text-zinc-200 transition-colors select-none" style={{ color: "#aaa" }}>
+              Sutinku pasirašyti elektroniniu būdu
+            </span>
+          </label>
+
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleDecline}
+              className="text-xs hover:text-red-400 transition-colors px-4 py-2 rounded-full"
+              style={{ color: "#888", border: "1px solid #333" }}
+            >
+              Atmesti sutartį
+            </button>
+            <button
+              type="button"
+              onClick={() => formRef.current?.requestSubmit()}
+              disabled={!confirmedRead || !confirmedEsign}
+              className="bg-white text-zinc-950 px-5 py-2 rounded-full text-xs font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Pasirašyti
+            </button>
+          </div>
         </div>
+
       </div>
     </>
   );

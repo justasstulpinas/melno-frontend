@@ -25,7 +25,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(body.detail ?? "Request failed");
+    const detail = body.detail;
+    const msg = typeof detail === "string" ? detail : JSON.stringify(detail) ?? "Request failed";
+    throw new Error(msg);
   }
 
   if (res.status === 204) return undefined as T;
@@ -205,6 +207,14 @@ export const api = {
       return r.json() as Promise<SecureSubmissionPreview>;
     });
   },
+  getSigningPreviewDocx(uuid: string): Promise<ArrayBuffer> {
+    return fetch(`${BASE_URL}/signing/submissions/${uuid}/preview-docx`, {
+      credentials: "include",
+    }).then(async (r) => {
+      if (!r.ok) throw new Error("DOCX preview not available");
+      return r.arrayBuffer();
+    });
+  },
   markSigningViewed(uuid: string) {
     return fetch(`${BASE_URL}/signing/submissions/${uuid}/viewed`, {
       method: "POST",
@@ -339,6 +349,7 @@ export type Template = {
   description: string | null;
   content: string | null;
   docx_path: string | null;
+  placeholders: string[];
   status: "draft" | "active" | "archived";
   logo_x: number;
   logo_y: number;
@@ -394,10 +405,15 @@ export type SecureSubmissionPreview = {
   content: string;
   fields: string[];
   is_sensitive: boolean;
+  is_docx: boolean;
   logo_image: string | null;
   logo_x: number;
   logo_y: number;
   logo_w: number;
+  owner_name: string | null;
+  owner_company: string | null;
+  owner_email: string | null;
+  owner_phone: string | null;
 };
 
 export type SecureSubmissionListItem = {

@@ -1,9 +1,43 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Landing page nav button hover effects */
+.nav-btn-outline {
+  border-color: rgba(244, 244, 244, 0.25);
+  transition: border-color 150ms, box-shadow 150ms, color 150ms;
+}
+.nav-btn-outline:hover {
+  border-color: rgba(244, 244, 244, 0.7);
+  box-shadow: 0 0 12px rgba(244, 244, 244, 0.15);
+  color: #ffffff;
+}
+.nav-btn-text {
+  transition: color 150ms;
+}
+.nav-btn-text:hover {
+  color: #ffffff;
+}
+
+/* Hide scrollbar on the landing page snap container */
+.snap-container::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
-  --background: #ffffff;
+  --background: #111111;
   --foreground: #171717;
+
+  /* ── Melno design tokens ── */
+  --m-bg:               #1e1e1e;
+  --m-surface:          #2a2a2a;
+  --m-surface-raised:   #363636;
+  --m-border:           #333333;
+  --m-text-primary:     #F4F4F4;
+  --m-text-secondary:   #D9D9D9;
+  --m-text-muted:       #BCBCBC;
+  --m-text-disabled:    #888888;
+  --m-action:           #D9D9D9;
+  --m-action-text:      #1E1E1E;
 }
 
 @theme inline {
@@ -11,6 +45,23 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Melno palette — generates bg-m-*, text-m-*, border-m-* Tailwind utilities */
+  --color-m-bg:               var(--m-bg);
+  --color-m-surface:          var(--m-surface);
+  --color-m-surface-raised:   var(--m-surface-raised);
+  --color-m-border:           var(--m-border);
+  --color-m-text-primary:     var(--m-text-primary);
+  --color-m-text-secondary:   var(--m-text-secondary);
+  --color-m-text-muted:       var(--m-text-muted);
+  --color-m-text-disabled:    var(--m-text-disabled);
+  --color-m-action:           var(--m-action);
+  --color-m-action-text:      var(--m-action-text);
+
+  /* Radius scale — generates rounded-card, rounded-pill, rounded-m-sm */
+  --radius-card: 15px;
+  --radius-pill: 9999px;
+  --radius-m-sm: 5px;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -53,6 +53,7 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ownerFields, setOwnerFields] = useState<string[]>([]);
   const [prefill, setPrefill] = useState<Record<string, string>>({});
+  const [autoFilled, setAutoFilled] = useState<Set<string>>(new Set());
   const [expiresInHours, setExpiresInHours] = useState(72);
   const [loading, setLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<SecureSubmissionResult | null>(null);
@@ -77,15 +78,20 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
 
   function selectTemplate(t: Template) {
     setSelected(t);
-    const fields = extractOwnerFields(t.content ?? "");
+    const fields = t.docx_path
+      ? t.placeholders.filter((f) => f.startsWith("owner_"))
+      : extractOwnerFields(t.content ?? "");
     setOwnerFields(fields);
     const initial: Record<string, string> = {};
+    const filled = new Set<string>();
     for (const field of fields) {
       const profileKey = PROFILE_MAP[field];
       const val = profileKey && profile ? (profile[profileKey] as string | null) : null;
       initial[field] = val ?? "";
+      if (val) filled.add(field);
     }
     setPrefill(initial);
+    setAutoFilled(filled);
     setStep("configure");
   }
 
@@ -189,33 +195,53 @@ export function NewContractModal({ onClose }: { onClose: () => void }) {
               {nonDateFields.length > 0 && (
                 <div className="flex flex-col gap-3">
                   <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Jūsų duomenys</p>
-                  {nonDateFields.map((field) => (
+                  {nonDateFields.map((field) => {
+                    const isAuto = autoFilled.has(field);
+                    return (
                     <div key={field}>
                       <label className="block text-xs text-zinc-400 mb-1">{FRIENDLY[field] ?? field}</label>
                       <input
                         value={prefill[field] ?? ""}
-                        onChange={(e) => setPrefill({ ...prefill, [field]: e.target.value })}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                        onChange={(e) => {
+                          setPrefill({ ...prefill, [field]: e.target.value });
+                          setAutoFilled((prev) => { const next = new Set(prev); next.delete(field); return next; });
+                        }}
+                        className={`w-full rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 transition-colors ${
+                          isAuto
+                            ? "bg-yellow-950/30 border border-yellow-600/60 focus:ring-yellow-600/40"
+                            : "bg-zinc-800 border border-zinc-700 focus:ring-zinc-600"
+                        }`}
                       />
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
               {dateFields.length > 0 && (
                 <div className="flex flex-col gap-3">
                   <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Datos</p>
-                  {dateFields.map((field) => (
+                  {dateFields.map((field) => {
+                    const isAuto = autoFilled.has(field);
+                    return (
                     <div key={field}>
                       <label className="block text-xs text-zinc-400 mb-1">{FRIENDLY[field] ?? field.replace(/_/g, " ")}</label>
                       <input
                         type="date"
                         value={prefill[field] ?? ""}
-                        onChange={(e) => setPrefill({ ...prefill, [field]: e.target.value })}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-zinc-600 [color-scheme:dark]"
+                        onChange={(e) => {
+                          setPrefill({ ...prefill, [field]: e.target.value });
+                          setAutoFilled((prev) => { const next = new Set(prev); next.delete(field); return next; });
+                        }}
+                        className={`w-full rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 [color-scheme:dark] transition-colors ${
+                          isAuto
+                            ? "bg-yellow-950/30 border border-yellow-600/60 focus:ring-yellow-600/40"
+                            : "bg-zinc-800 border border-zinc-700 focus:ring-zinc-600"
+                        }`}
                       />
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

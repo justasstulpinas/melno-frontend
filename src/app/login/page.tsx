@@ -7,8 +7,11 @@ import { Syne } from "next/font/google";
 import { api, saveToken } from "@/lib/api";
 import { FloatingInput } from "@/components/FloatingInput";
 import { validateEmail } from "@/lib/validation";
+import { MelnoLogo } from "@/components/MelnoLogo";
+import { HeroCycler } from "@/components/HeroCycler";
+import { c, type, r } from "@/lib/design";
 
-const syne = Syne({ subsets: ["latin"], weight: ["400", "500", "600"] });
+const syne = Syne({ subsets: ["latin"], weight: ["400", "600"] });
 
 function LoginForm() {
   const router = useRouter();
@@ -42,40 +45,58 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className={`${syne.className} min-h-screen flex`}>
 
-      {/* Left — 1/3 brand panel */}
-      <div className="hidden lg:flex flex-col justify-between w-1/3 bg-zinc-900 px-10 py-12">
-        <Link href="/" className="text-base font-semibold text-white tracking-tight">
-          Melno
-        </Link>
-
-        <div>
-          <p className={`${syne.className} text-4xl font-semibold text-white leading-snug mb-6`}>
-            Sutartys.<br />Greitai.<br />Paprastai.
-          </p>
-          <p className={`${syne.className} text-sm text-zinc-500 leading-relaxed`}>
-            Sukurk šabloną vieną kartą ir siųsk pasirašyti klientams per 30 sekundžių.
-          </p>
+      {/* ── Left: word cycler ── */}
+      <div
+        className="hidden lg:flex flex-col w-1/3 px-12 py-10"
+        style={{ background: c.bg }}
+      >
+        <div className="mb-auto pb-8">
+          <Link href="/"><MelnoLogo /></Link>
         </div>
 
-        <p className={`${syne.className} text-xs text-zinc-600`}>© 2026 Melno</p>
+        <div className="flex-1 flex flex-col justify-center">
+          <HeroCycler
+            className="font-semibold leading-none"
+            style={{
+              fontSize: "clamp(28px, 3vw, 48px)",
+              letterSpacing: "-0.03em",
+              color: c.textPrimary,
+            }}
+          />
+        </div>
+
+        <p style={{ ...type.label, marginTop: 24, letterSpacing: "normal", textTransform: "none" }}>
+          © 2026 Melno
+        </p>
       </div>
 
-      {/* Right — 2/3 form */}
-      <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center px-6 py-12">
+      {/* ── Right: login form ── */}
+      <div
+        className="flex-1 flex flex-col items-center justify-center px-6 py-12"
+        style={{ background: c.surface }}
+      >
         <div className="w-full max-w-md">
 
           {/* Mobile logo */}
-          <Link href="/" className="block text-center text-base font-semibold text-white mb-10 lg:hidden tracking-tight">
-            Melno
+          <Link href="/" className="block text-center mb-10 lg:hidden">
+            <MelnoLogo />
           </Link>
 
-          <h1 className="text-2xl font-semibold text-white mb-1">Sveiki sugrįžę</h1>
-          <p className={`${syne.className} text-sm text-zinc-400 mb-8`}>Prisijunkite prie savo paskyros</p>
+          <h1 style={{ ...type.display, marginBottom: 4 }}>Sveiki sugrįžę</h1>
+          <p style={{ ...type.bodyLarge, marginBottom: 32 }}>Prisijunkite prie savo paskyros</p>
 
           {passwordReset && (
-            <p className={`${syne.className} text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 rounded-full px-3 py-2 mb-4`}>
+            <p style={{
+              ...type.body,
+              color: "#4ade80",
+              background: "rgba(5,46,22,0.4)",
+              border: "1px solid rgba(20,83,45,0.5)",
+              borderRadius: r.pill,
+              padding: "8px 16px",
+              marginBottom: 16,
+            }}>
               Slaptažodis sėkmingai pakeistas. Galite prisijungti.
             </p>
           )}
@@ -108,13 +129,11 @@ function LoginForm() {
               }
             />
 
-            <label className="flex items-center gap-2.5 cursor-pointer group">
+            {/* Remember me */}
+            <label className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setRemember(!remember)}>
               <div
-                onClick={() => setRemember(!remember)}
                 className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors shrink-0 ${
-                  remember
-                    ? "bg-white border-white"
-                    : "bg-transparent border-zinc-600 group-hover:border-zinc-400"
+                  remember ? "bg-white border-white" : "bg-transparent border-zinc-600 group-hover:border-zinc-400"
                 }`}
               >
                 {remember && (
@@ -123,38 +142,66 @@ function LoginForm() {
                   </svg>
                 )}
               </div>
-              <span
-                onClick={() => setRemember(!remember)}
-                className={`${syne.className} text-xs select-none ${remember ? "text-zinc-300" : "text-zinc-500 group-hover:text-zinc-400"} transition-colors`}
-              >
+              <span style={{ ...type.body, color: remember ? c.textSecondary : c.textDisabled }}>
                 Prisiminti mane
               </span>
             </label>
 
             {error && (
-              <p className={`${syne.className} text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-full px-3 py-2`}>
+              <p style={{
+                ...type.body,
+                color: "#f87171",
+                background: "rgba(127,29,29,0.3)",
+                border: "1px solid rgba(153,27,27,0.5)",
+                borderRadius: r.pill,
+                padding: "8px 16px",
+              }}>
                 {error}
               </p>
             )}
 
             <button
               type="submit"
-              className="w-full bg-white text-zinc-950 rounded-full py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+              disabled={loading}
+              style={{
+                background: c.action,
+                color: c.actionText,
+                borderRadius: r.pill,
+                border: "none",
+                padding: "10px 0",
+                width: "100%",
+                fontFamily: "'Syne', sans-serif",
+                fontSize: "14px",
+                fontWeight: 600,
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                marginTop: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                transition: "opacity 0.2s",
+              }}
             >
-              {loading && <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>}
+              {loading && (
+                <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              )}
               {loading ? "Jungiamasi…" : "Prisijungti"}
             </button>
           </form>
 
-          <p className={`${syne.className} text-center text-sm text-zinc-500 mt-4`}>
-            <Link href="/forgot-password" className="text-zinc-400 hover:text-white transition-colors">
+          <p style={{ ...type.body, textAlign: "center", marginTop: 16 }}>
+            <Link href="/forgot-password" style={{ color: c.textMuted }}>
               Pamiršote slaptažodį?
             </Link>
           </p>
 
-          <p className={`${syne.className} text-center text-sm text-zinc-500 mt-4`}>
+          <p style={{ ...type.body, textAlign: "center", marginTop: 12 }}>
             Neturite paskyros?{" "}
-            <Link href="/register" className="text-zinc-300 hover:text-white transition-colors">
+            <Link href="/register" style={{ color: c.textPrimary }}>
               Registruotis
             </Link>
           </p>
