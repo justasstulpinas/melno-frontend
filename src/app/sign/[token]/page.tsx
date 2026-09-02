@@ -170,7 +170,7 @@ function SignDocxViewer({ buffer }: { buffer: ArrayBuffer }) {
   return <div ref={ref} className="docx-preview w-full" />;
 }
 
-type Step = "loading" | "not_found" | "code_entry" | "preview_loading" | "preview" | "fill_sign" | "signing" | "success" | "declined";
+type Step = "loading" | "not_found" | "locked" | "code_entry" | "preview_loading" | "preview" | "fill_sign" | "signing" | "success" | "declined";
 
 // ─────────────────────────────────────────────────────────────
 // 6-box OTP input — supports paste, auto-advance, backspace
@@ -317,7 +317,12 @@ export default function SignPage() {
       const res = await api.verifySigningCode(uuid, code);
       if (!res.ok) {
         const body = await res.json().catch(() => ({ detail: "Neteisingas kodas" }));
-        setCodeError(body.detail ?? "Neteisingas kodas");
+        const detail: string = body.detail ?? "Neteisingas kodas";
+        if (detail.toLowerCase().includes("too many") || detail.toLowerCase().includes("locked")) {
+          setStep("locked");
+          return;
+        }
+        setCodeError(detail);
         return;
       }
       // Code verified — load preview
@@ -415,9 +420,36 @@ export default function SignPage() {
     return (
       <div className={`${pageClass} items-center justify-center px-4 relative`}>
         <div className="absolute top-6 left-6"><MelnoLogo /></div>
-        <div className="text-center">
-          <p className="text-lg font-semibold text-white mb-2">Nuoroda nepasiekiama</p>
-          <p className="text-sm text-zinc-400">Nuoroda nerasta, baigė galioti arba jau panaudota.</p>
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: "#2a2a2a", border: "1px solid #3a3a3a" }}>
+            <svg className="w-6 h-6 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold text-white mb-3">Nuoroda nepasiekiama</h1>
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            Ši nuoroda nebegalioja. Galimos priežastys: nuorodos galiojimo laikas pasibaigė, sutartis jau buvo pasirašyta arba nuoroda buvo atšaukta.
+          </p>
+          <p className="text-xs text-zinc-600 mt-4">Jei manote, kad tai klaida — susisiekite su sutarties siuntėju.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "locked") {
+    return (
+      <div className={`${pageClass} items-center justify-center px-4 relative`}>
+        <div className="absolute top-6 left-6"><MelnoLogo /></div>
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: "rgba(120,60,0,0.2)", border: "1px solid rgba(180,100,0,0.3)" }}>
+            <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-9a3 3 0 00-3 3v2h6V9a3 3 0 00-3-3z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold text-white mb-3">Per daug bandymų</h1>
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            Kodas buvo įvestas per daug kartų. Bandymai laikinai blokuoti. Pabandykite po kelių minučių.
+          </p>
         </div>
       </div>
     );
@@ -444,15 +476,40 @@ export default function SignPage() {
     return (
       <div className={`${pageClass} items-center justify-center px-4 relative`}>
         <div className="absolute top-6 left-6"><MelnoLogo /></div>
-        <div className="text-center max-w-sm w-full">
-          <div className="w-14 h-14 bg-emerald-950 border border-emerald-800 rounded-full flex items-center justify-center mx-auto mb-5">
-            <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+        <div className="w-full max-w-sm">
+          <div className="rounded-2xl p-8 text-center" style={{ background: "#2a2a2a" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(52,211,153,0.3)" }}>
+              <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-semibold text-white mb-3" style={{ letterSpacing: "-0.03em" }}>
+              Sutartis pasirašyta!
+            </h1>
+            <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+              Pasirašyta sutartis atsisiųsta į jūsų įrenginį. Išsaugokite ją saugioje vietoje.
+            </p>
+            <div className="text-left rounded-xl p-4 space-y-2.5" style={{ background: "#1e1e1e" }}>
+              <div className="flex items-start gap-2.5">
+                <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-xs text-zinc-400">Sutarties savininkas gausite pranešimą el. paštu</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-xs text-zinc-400">Abu egzemplioriai turi vienodą teisinę galią</p>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-xs text-zinc-400">Sutartis sudaryta pagal ES elektroninių parašų reglamentą (eIDAS)</p>
+              </div>
+            </div>
           </div>
-          <h1 className="text-xl font-semibold text-white mb-2">Sutartis pasirašyta</h1>
-          <p className="text-sm text-zinc-400">Jūsų kopija atsisiųsta į įrenginį. Išsaugokite ją saugiai.</p>
-          <p className="text-xs text-zinc-600 mt-4">Sutarties savininkas gaus pranešimą ir savo kopiją.</p>
         </div>
       </div>
     );
@@ -578,10 +635,10 @@ export default function SignPage() {
         </div>
 
         {/* ── Sidebar + document row ── */}
-        <form ref={formRef} onSubmit={handleSign} className="flex-1 min-h-0 flex">
+        <form ref={formRef} onSubmit={handleSign} className="flex-1 min-h-0 flex flex-col lg:flex-row">
 
           {/* ── Left sidebar (scrolls internally) ── */}
-          <div className="w-[264px] shrink-0 overflow-y-auto flex flex-col gap-2 p-3" style={{ background: "#1e1e1e", borderRight: "1px solid #2a2a2a" }}>
+          <div className="w-full lg:w-[264px] lg:shrink-0 overflow-y-auto flex flex-col gap-2 p-3 max-h-[42dvh] lg:max-h-none border-b lg:border-b-0 lg:border-r border-[#2a2a2a]" style={{ background: "#1e1e1e" }}>
 
             {/* Card 1: Owner identity */}
             <div className="rounded-xl p-3" style={{ background: "#2a2a2a" }}>
@@ -761,15 +818,15 @@ export default function SignPage() {
 
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" checked={confirmedRead} onChange={(e) => setConfirmedRead(e.target.checked)} className="shrink-0 accent-white" />
-            <span className="text-[11px] group-hover:text-zinc-200 transition-colors select-none" style={{ color: "#aaa" }}>
-              Perskaičiau ir suprantu sutarties turinį
+            <span className="text-[11px] group-hover:text-zinc-200 transition-colors select-none leading-snug" style={{ color: "#aaa" }}>
+              Perskaičiau sutarties tekstą ir suprantu jos sąlygas
             </span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" checked={confirmedEsign} onChange={(e) => setConfirmedEsign(e.target.checked)} className="shrink-0 accent-white" />
-            <span className="text-[11px] group-hover:text-zinc-200 transition-colors select-none" style={{ color: "#aaa" }}>
-              Sutinku pasirašyti elektroniniu būdu
+            <span className="text-[11px] group-hover:text-zinc-200 transition-colors select-none leading-snug" style={{ color: "#aaa" }}>
+              Sutinku sudaryti sutartį elektroniniu parašu (eIDAS regl. 910/2014, 25 str.)
             </span>
           </label>
 
